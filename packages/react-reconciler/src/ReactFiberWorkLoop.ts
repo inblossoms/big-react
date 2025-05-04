@@ -1,0 +1,137 @@
+import { FiberRoot, Fiber } from "./ReactInternalTypes";
+import { ensureRootIsScheduled } from "./ReactFiberRootScheduler";
+import { createWorkInProgress } from "./ReactFiber";
+import { completeWork } from "./ReactFiberCompleteWork";
+import { beginWork } from "./ReactFiberBeginWork";
+import { commitMutationEffects } from "./ReactFiberCommitWork";
+
+type ExecutionContext = number;
+
+export const NoContext: ExecutionContext = 0b000;
+export const BatchedContext: ExecutionContext = 0b001;
+export const RenderContext: ExecutionContext = 0b010;
+export const CommitContext: ExecutionContext = 0b100;
+
+let executionContext: ExecutionContext = NoContext;
+
+let workInProgress: Fiber | null = null;
+let workInProgressRoot: FiberRoot | null = null;
+
+//! 页面的初次渲染、类组件的 setState|forceUpdate、函数组件 setState 都会走到更新，调用该函数
+export function scheduleUpdateOnFiber(root: FiberRoot, fiber: Fiber) {
+   workInProgressRoot = root;
+   workInProgress = fiber;
+
+   ensureRootIsScheduled(root);
+}
+
+export function performConcurrentWorkOnRoot(root: FiberRoot) {
+   //? 1. render，构建 fiber 树 > VDOM
+   //> 包括了两个阶段：beginWork | completedWork
+   renderRootSync(root);
+
+   //? 2. commit，将 fiber 树渲染到真实 DOM
+   const finishedWork: Fiber = root.current.alternate as Fiber;
+   root.finishedWork = finishedWork; // 根 fiber
+
+   commitRoot(root);
+}
+
+function commitRoot(root: FiberRoot) {
+   //? 1. begin
+   const previousExecutionContext = executionContext;
+   executionContext |= CommitContext;
+
+   //? 2. mutation：渲染 DOM 元素
+   commitMutationEffects(root, root.finishedWork as Fiber); // Fiber: HostRoot 3
+
+   //? 3. finished
+   executionContext = previousExecutionContext;
+   workInProgressRoot = null;
+}
+
+function renderRootSync(root: FiberRoot) {
+   //? 1. render begining
+   const previousExecutionContext = executionContext;
+   executionContext |= RenderContext; //> 可能会存在多个类型的 context 进行合并
+
+   //? 2. initialize from root
+   prepareFreshStask(root);
+   //? 3. iterate fiber tree, perform unit of work
+   //> dfs 深度优先遍历
+   workLoopSync();
+
+   //? 4. return the root
+   executionContext = previousExecutionContext;
+   workInProgressRoot = null;
+}
+
+function prepareFreshStask(root: FiberRoot): Fiber {
+   root.finishedWork = null; //> 表示之后要提交的 work
+
+   workInProgressRoot = root; // FiberRoot
+   const rootWorkInProgress = createWorkInProgress(root.current, null); // Fiber
+
+   workInProgress = rootWorkInProgress;
+
+   return rootWorkInProgress; // 返回 rootWorkInProgress 作为 workInProgress
+}
+
+function workLoopSync() {
+   while (workInProgress !== null) {
+      performUnitOfWork(workInProgress);
+   }
+}
+
+/**
+ * 处理当前次调用分发的工作单元
+ * @param fiber 子 Fiber
+ */
+function performUnitOfWork(unitOfWork: Fiber) {
+   const current = unitOfWork.alternate;
+   //? 1. beginWork
+   let next = beginWork(current, unitOfWork);
+
+   //> 把 pendingProps 更新到 memoizedProps
+   unitOfWork.memoizedProps = unitOfWork.pendingProps;
+
+   if (next === null) {
+      //// 没有产生新的 work
+      completeUnitOfWork(unitOfWork);
+   } else {
+      workInProgress = next;
+   }
+
+   //> 1.1 执行自己
+   //> 1.2 （协调、bailout）return 新的 fiber
+
+   //? 2. completeWork
+}
+
+/**
+ * dfs: child、sibling、parent ... build fiber tree
+ * @param unitOfWork
+ */
+function completeUnitOfWork(unitOfWork: Fiber) {
+   let completedWork: Fiber | null = unitOfWork;
+
+   do {
+      const current = completedWork.alternate;
+      const returnFiber = completedWork.return; //> Fiber.return -> 指向父级 fiber
+
+      let next = completeWork(current, completedWork);
+      if (next !== null) {
+         workInProgress = next;
+         return;
+      }
+
+      const siblingFiber = completedWork.sibling;
+      if (siblingFiber !== null) {
+         workInProgress = siblingFiber;
+         return;
+      }
+
+      completedWork = returnFiber as Fiber;
+      workInProgress = completedWork;
+   } while (completedWork !== null);
+}

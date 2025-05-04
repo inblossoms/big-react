@@ -1,0 +1,44 @@
+{
+	"compilerOptions": {
+		"target": "ES2020",
+		"useDefineForClassFields": true,
+		"module": "ESNext",
+		"lib": [
+			"ES2020",
+			"DOM",
+			"DOM.Iterable"
+		],
+		"skipLibCheck": true,
+		"moduleResolution": "bundler",
+		"allowImportingTsExtensions": true,
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"noEmit": true,
+		"jsx": "react-jsx",
+		"strict": true,
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noFallthroughCasesInSwitch": true,
+		"baseUrl": ".",
+		"paths": {
+			"shared/*": [
+				"packages/shared/*"
+			],
+			"react/*": [
+				"packages/react/*"
+			],
+			"react-dom/*": [
+				"packages/react-dom/*"
+			],
+			"react-reconciler/*": [
+				"packages/react-reconciler/*"
+			],
+			"scheduler/*": [
+				"packages/scheduler/*"
+			]
+		}
+	},
+	"include": [
+		"packages/**/*"
+	]
+}
