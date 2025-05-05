@@ -17,7 +17,11 @@ let executionContext: ExecutionContext = NoContext;
 let workInProgress: Fiber | null = null;
 let workInProgressRoot: FiberRoot | null = null;
 
-//! 页面的初次渲染、类组件的 setState|forceUpdate、函数组件 setState 都会走到更新，调用该函数
+/**
+ * 调度更新：页面的初次渲染、类组件的 setState|forceUpdate、函数组件 setState 都会走到更新，调用该函数
+ * @param root
+ * @param fiber
+ */
 export function scheduleUpdateOnFiber(root: FiberRoot, fiber: Fiber) {
    workInProgressRoot = root;
    workInProgress = fiber;
@@ -66,13 +70,21 @@ function renderRootSync(root: FiberRoot) {
    workInProgressRoot = null;
 }
 
+/**
+ * 准备新的任务，准备阶段
+ * @param root
+ * @returns
+ */
 function prepareFreshStask(root: FiberRoot): Fiber {
    root.finishedWork = null; //> 表示之后要提交的 work
 
    workInProgressRoot = root; // FiberRoot
    const rootWorkInProgress = createWorkInProgress(root.current, null); // Fiber
 
-   workInProgress = rootWorkInProgress;
+   if (workInProgress === null) {
+      // 页面初次渲染时，从根节点开始
+      workInProgress = rootWorkInProgress; // Fiber
+   }
 
    return rootWorkInProgress; // 返回 rootWorkInProgress 作为 workInProgress
 }
@@ -84,7 +96,7 @@ function workLoopSync() {
 }
 
 /**
- * 处理当前次调用分发的工作单元
+ * 处理当前次调用分发的工作单元，工作开始阶段
  * @param fiber 子 Fiber
  */
 function performUnitOfWork(unitOfWork: Fiber) {
@@ -93,6 +105,8 @@ function performUnitOfWork(unitOfWork: Fiber) {
    let next = beginWork(current, unitOfWork);
 
    //> 把 pendingProps 更新到 memoizedProps
+   // pendingProps 值处于一个待处理状态，beginWork 阶段，会根据 pendingProps 生成新的 memoizedProps
+   // 这里已经处理完了，所以需要把 pendingProps 更新到 memoizedProps
    unitOfWork.memoizedProps = unitOfWork.pendingProps;
 
    if (next === null) {
