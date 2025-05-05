@@ -56,7 +56,7 @@ function updateHostText(current: Fiber | null, workInProgress: Fiber) {
 }
 
 /**
- * 处理更新根 fiber
+ * 处理更新根 fiber，此时意味着根节点已经创建好了
  * @param current 老 fiber
  * @param workInProgress 新 fiber
  * @returns 返回子节点
@@ -64,6 +64,12 @@ function updateHostText(current: Fiber | null, workInProgress: Fiber) {
 function updateHostRoot(current: Fiber | null, workInProgress: Fiber) {
    const nextChildren = workInProgress.memoizedState.element;
    reconcileChildren(current, workInProgress, nextChildren);
+
+   //> 更新阶段
+   if (current) {
+      current.child = workInProgress.child; // 此时 老节点 的 child 指向 新节点的 child
+   }
+
    return workInProgress.child;
 }
 
@@ -80,7 +86,6 @@ function updateHostComponent(current: Fiber | null, workInProgress: Fiber) {
    let nextChildren = nextProps.children;
 
    const isDirectTextChild = shouldSetTextContent(type, pendingProps);
-
    //> 如果原生标签只有一个文本，此时文本不再生成 fiber 节点，而是做为这个原生标签的属性
    if (isDirectTextChild /* 文本属性 */) {
       nextChildren = null;

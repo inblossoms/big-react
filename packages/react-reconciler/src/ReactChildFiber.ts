@@ -2,7 +2,11 @@ import { ReactElement } from "shared/ReactTypes";
 import { REACT_ELEMENT_TYPE } from "shared/ReactSymbols";
 import { Placement } from "./ReactFiberFlags";
 import { Fiber } from "./ReactInternalTypes";
-import { createFiberFromElement, createFiberFromText } from "./ReactFiber";
+import {
+   createFiberFromElement,
+   createFiberFromText,
+   createWorkInProgress,
+} from "./ReactFiber";
 import { isArray, isNumber, isString } from "shared/utils";
 
 type ChildReconciler = (
@@ -45,7 +49,7 @@ function createChildReconciler(
       }
 
       // 处理字符串或数字类型的子节点
-      if (isTextFiber(newChildEl)) {
+      if (isText(newChildEl)) {
          //> 处理文本节点
          return placeSingleChild(
             reconcileSingleTextNode(
@@ -64,7 +68,6 @@ function createChildReconciler(
             newChildEl
          );
       }
-
       return null;
    }
 
@@ -82,19 +85,48 @@ function createChildReconciler(
    }
 
    /**
-    * 协调单个子节点
+    * 协调单个子节点，对于页面的初次渲染、创建 fiber，不涉及对比复用老节点
     * @param returnFiber 父 fiber
     * @param currentFirstChild
-    * @param newChildEl
+    * @param element
     * @returns
     */
    function reconcileSingleElement(
       returnFiber: Fiber,
       currentFirstChild: Fiber | null,
-      newChildEl: ReactElement
+      element: ReactElement
    ): Fiber {
+      //! 复用节点的条件
+      //> 1. 新老节点类型相同  2. key 相同  3. 同一层级
+      const key = element.key;
+      let child = currentFirstChild; // 当前 fiber tree 的第一个子 fiber
+
+      while (child !== null) {
+         if (child.key === key) {
+            const elType = element.type;
+            if (elType === child.elementType) {
+               // 复用节点
+               // eslint-disable-next-line react-hooks/rules-of-hooks
+               const existing = useFiber(child, element.props);
+               // 在同一层级下进行查找 设置父级引用
+               existing.return = returnFiber;
+               return existing;
+            }
+            //! 前提：React 认为在同一层级下不会存在相同的 key 的节点
+            //! 所以当节点类型不同时则无法复用
+            else {
+               break;
+            }
+         } else {
+            // todo: 节点的删除行为
+            // 删除多余或不存在的节点
+         }
+         // 在同一层级下继续查找
+         child = child.sibling;
+      }
+
       // 根据新的虚拟 DOM 创建新的 fiber
-      const createdFiber = createFiberFromElement(newChildEl);
+      const createdFiber = createFiberFromElement(element);
 
       // 设置父级引用
       createdFiber.return = returnFiber;
@@ -176,7 +208,7 @@ function createChildFiber(returnFiber: Fiber, newChild: any): Fiber | null {
       }
    }
 
-   if (isTextFiber(newChild)) {
+   if (isText(newChild)) {
       //> 节点可能是一个 number 类型
       const textFiber = createFiberFromText(String(newChild));
       textFiber.return = returnFiber;
@@ -186,6 +218,13 @@ function createChildFiber(returnFiber: Fiber, newChild: any): Fiber | null {
    return null;
 }
 
-function isTextFiber(newChild: any) {
+function useFiber(fiber: Fiber, pendingProps: any): Fiber {
+   const clone = createWorkInProgress(fiber, pendingProps);
+   clone.index = 0;
+   clone.sibling = null;
+   return clone;
+}
+
+function isText(newChild: any) {
    return (isString(newChild) && newChild !== "") || isNumber(newChild);
 }

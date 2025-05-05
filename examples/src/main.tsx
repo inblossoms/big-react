@@ -26,20 +26,18 @@ import "./index.css";
 // }
 
 function FunctionComponent({ name }: { name: string }) {
-   const [count, setCount] = useReducer((x) => x++, 0);
+   const [count, setCount] = useReducer((x: number) => x + 1, 0);
 
    return (
       <div className="border">
-         <h3>Hi! {name}</h3>
+         {/* <h3>Hi! {name}</h3> */}
+         {/* <h4>{count}</h4> */}
          <button
             onClick={() => {
-               console.log(
-                  `🧠 [] \x1b[91mFile: main.tsx\x1b[0m, \x1b[32mLine: 34\x1b[0m, Message: `
-               );
                setCount();
             }}
          >
-            +
+            {count}
          </button>
       </div>
    );

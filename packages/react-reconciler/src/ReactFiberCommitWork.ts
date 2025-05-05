@@ -30,18 +30,21 @@ function recursivelyTraverseMutationEffects(
 
       if (siblingFiber !== null) {
          child = siblingFiber;
-      } else {
-         //> 当所有兄弟节点都遍历完后，向上遍历父节点，找到有兄弟节点的父节点
-         //> 选择该节点做为下一个节点开始遍历
-         let parent = child.return;
-         while (parent !== null && parent.sibling === null) {
-            child = parent;
-            parent = parent.return;
+         continue;
+      }
+
+      // 如果没有子节点，处理兄弟节点
+      while (child !== null) {
+         commitReconciliationEffects(child);
+
+         if (child.sibling !== null) {
+            child = child.sibling;
+            break;
          }
-         if (parent !== null) {
-            child = parent.sibling;
-         } else {
-            child = null;
+
+         child = child.return;
+         if (child === parentFiber) {
+            return;
          }
       }
    }
@@ -59,7 +62,7 @@ function commitReconciliationEffects(finishedWork: Fiber) {
       // 页面的初次渲染，新增插入：appendChild
       commitPlacement(finishedWork);
       //! 移除 Placement 标记
-      finishedWork.flags = flags & ~Placement;
+      finishedWork.flags &= ~Placement;
    }
 }
 
@@ -107,14 +110,14 @@ function getHostParentFiber(fiber: Fiber) {
 
 /**
  * 判断父级是否为真实 DOM 元素
- * @param parent
+ * @param fiber
  */
-function isHostParent(parent: Fiber): boolean {
+function isHostParent(fiber: Fiber): boolean {
    /**
     * Host 节点有三种：
     * - HostComponent：DOM 元素
     * - HostRoot：React 根节点
     * - HostText：文本节点，不存在子节点
     */
-   return parent.tag === HostComponent || parent.tag === HostRoot;
+   return fiber.tag === HostComponent || fiber.tag === HostRoot;
 }
