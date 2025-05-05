@@ -30,15 +30,17 @@ function FunctionComponent({ name }: { name: string }) {
 
    return (
       <div className="border">
-         {/* <h3>Hi! {name}</h3> */}
-         {/* <h4>{count}</h4> */}
-         <button
-            onClick={() => {
-               setCount();
-            }}
-         >
-            {count}
-         </button>
+         {count % 2 === 0 ? (
+            <button
+               onClick={() => {
+                  setCount();
+               }}
+            >
+               {count}
+            </button>
+         ) : (
+            <span onClick={() => setCount()}>react</span>
+         )}
       </div>
    );
 }
