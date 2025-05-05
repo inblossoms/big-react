@@ -172,6 +172,6 @@ function appendInitialChild(parent: Element, child: Element) {
  * @param node fiber
  * @returns 是否是原生节点
  */
-function isHost(node: Fiber): boolean {
+export function isHost(node: Fiber): boolean {
    return node.tag === HostComponent || node.tag === HostText;
 }

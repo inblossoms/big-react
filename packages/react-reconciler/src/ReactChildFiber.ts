@@ -1,6 +1,6 @@
 import { ReactElement } from "shared/ReactTypes";
 import { REACT_ELEMENT_TYPE } from "shared/ReactSymbols";
-import { Placement } from "./ReactFiberFlags";
+import { ChildDeletion, Placement } from "./ReactFiberFlags";
 import { Fiber } from "./ReactInternalTypes";
 import {
    createFiberFromElement,
@@ -22,7 +22,7 @@ export const mountChildFibers: ChildReconciler = createChildReconciler(false);
 
 /**
  * 协调子节点 （协调：根据新的虚拟 DOM 创建新的 fiber）
- * @param shouldTrackSideEffects
+ * @param shouldTrackSideEffects 是否初次渲染
  * @returns
  */
 function createChildReconciler(
@@ -115,11 +115,14 @@ function createChildReconciler(
             //! 前提：React 认为在同一层级下不会存在相同的 key 的节点
             //! 所以当节点类型不同时则无法复用
             else {
+               //> 进入当前分支则意味着是节点类型的不同，无法复用；同时从链表当前节点位置及其之后的所有节点也都需要舍弃
+               deleteRemainingChildren(returnFiber, child);
                break;
             }
          } else {
-            // todo: 节点的删除行为
             // 删除多余或不存在的节点
+            //> deleteChild 删除行为依旧在循环中，如果还存在需要删除的节点 则依旧会执行删除行为
+            deleteChild(returnFiber, child);
          }
          // 在同一层级下继续查找
          child = child.sibling;
@@ -127,7 +130,6 @@ function createChildReconciler(
 
       // 根据新的虚拟 DOM 创建新的 fiber
       const createdFiber = createFiberFromElement(element);
-
       // 设置父级引用
       createdFiber.return = returnFiber;
 
@@ -195,6 +197,47 @@ function createChildReconciler(
       return resultingFirstChild;
    }
 
+   /**
+    * 删除单个子节点
+    * @param returnFiber 父级 fiber
+    * @param child 删除的目标子节点
+    * @returns
+    */
+   function deleteChild(returnFiber: Fiber, child: Fiber) {
+      if (!shouldTrackSideEffects) {
+         // 初次渲染跳过
+         return;
+      }
+
+      const deletions = returnFiber.deletions;
+
+      if (deletions === null) {
+         returnFiber.deletions = [child];
+         returnFiber.flags |= ChildDeletion;
+      } else {
+         deletions.push(child);
+      }
+   }
+
+   /**
+    * 删除从当前 child 节点开始及其之后的所有节点
+    * @param returnFiber 父级节点 fiber
+    * @param child 链表要删除的节点中的首个节点位置
+    */
+   function deleteRemainingChildren(returnFiber: Fiber, child: Fiber) {
+      if (!shouldTrackSideEffects) {
+         return;
+      }
+
+      let current = child;
+
+      while (current !== null) {
+         deleteChild(returnFiber, current);
+         current = current.sibling as Fiber;
+      }
+
+      return null;
+   }
    return reconcileChildFibers;
 }
 

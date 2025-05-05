@@ -60,6 +60,9 @@ export type Fiber = {
    // 上一次渲染时使用的 fiber
    //> 缓存 fiber，做新老 vdom diff
    alternate: Fiber | null;
+
+   // 记录要删除的子节点
+   deletions: Array<Fiber> | null;
 };
 
 export class FiberNode {
@@ -76,7 +79,8 @@ export class FiberNode {
    memoizedProps: any; // 上一次渲染时使用的 props
    memoizedState: any; // 不同组件的 memoizedState 存储不同，函数组件 hook[0] 的值 类组件 state 原生组件 RootState
    flags: number; // 标记当前组件的 Effect 相关副作用
-   alternate: FiberNode | null; // 上一次渲染时使用的 fiber
+   alternate: FiberNode | null; // 缓存上一次渲染时使用的 fiber
+   deletions: Array<Fiber> | null; // 记录要删除的子节点
 
    constructor(tag: WorkTag, pendingProps: unknown, key: null | string) {
       this.tag = tag;
@@ -93,5 +97,6 @@ export class FiberNode {
       this.memoizedState = null;
       this.flags = NoFlags;
       this.alternate = null;
+      this.deletions = null;
    }
 }
