@@ -2,5 +2,10 @@
 
 // export { ReactDOM };
 
-export { Fragment, Component, useReducer } from "../packages/react/index.ts";
+export {
+   Fragment,
+   Component,
+   useReducer,
+   useState,
+} from "../packages/react/index.ts";
 export * as ReactDOM from "../packages/react-dom/client.ts";

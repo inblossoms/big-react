@@ -1,4 +1,10 @@
-import { ReactDOM, Fragment, Component, useReducer } from "../which-react";
+import {
+   ReactDOM,
+   Fragment,
+   Component,
+   useState,
+   useReducer,
+} from "../which-react";
 import "./index.css";
 
 // const fragment = (
@@ -27,18 +33,29 @@ import "./index.css";
 
 function FunctionComponent({ name }: { name: string }) {
    const [count, setCount] = useReducer((x: number) => x + 1, 0);
+   const [num, setNum] = useState(1);
+
    //    const arr = count % 2 === 0 ? [0, 1, 2, 3, 4, 5] : [0, 1, 2, 3, 4];
    const arr = count % 2 === 0 ? [0, 1, 2, 3, 4, 5] : [3, 2, 4, 0, 5, 1];
 
+   const _cls = count % 2 === 0 ? "red yellow_border" : "yellow red_border";
+
    return (
       <div className="border">
-         <h2>Hi! {name}</h2>
+         <h2 className={_cls}>Hi! {name}</h2>
          <button
             onClick={() => {
                setCount();
             }}
          >
             {count}
+         </button>
+         <button
+            onClick={() => {
+               setNum(num + 1);
+            }}
+         >
+            {num}
          </button>
          <ul>
             {arr.map((i) => (

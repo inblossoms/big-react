@@ -1,3 +1,4 @@
+import { isFunction } from "shared/utils";
 import { scheduleUpdateOnFiber } from "./ReactFiberWorkLoop";
 import type { Fiber, FiberRoot } from "./ReactInternalTypes";
 import { HostRoot } from "./ReactWorkTags";
@@ -70,7 +71,7 @@ export function renderWithHooks(
 }
 
 export function useReducer<S, I, A>(
-   reducer: (state: S, action: A) => S,
+   reducer: ((state: S, action: A) => S) | null,
    initialArgs: I,
    init?: (initialArgs: I) => S
 ) {
@@ -104,6 +105,13 @@ export function useReducer<S, I, A>(
    return [hook.memoizedState, dispatch];
 }
 
+export function useState<S>(initialState: (() => S) | S) {
+   const init = isFunction(initialState)
+      ? (initialState as () => S)()
+      : initialState;
+   return useReducer(null, init);
+}
+
 function finishRenderingHooks() {
    currentlyRenderingFiber = null;
    workInProgressHook = null;
@@ -113,7 +121,7 @@ function finishRenderingHooks() {
 function dispatchReducerAction<S, I, A>(
    fiber: Fiber,
    hook: Hook,
-   reducer: (state: S, action: A) => S,
+   reducer: ((state: S, action: A) => S) | null,
    action: any // setState 的初始值可能为任意类型值
 ) {
    //? setState 时，reducer 为 null  > setState 和 setRuducer 都会触发该函数
@@ -131,7 +139,7 @@ function dispatchReducerAction<S, I, A>(
       fiber.sibling.alternate = fiber.sibling;
    }
 
-   scheduleUpdateOnFiber(root, fiber);
+   scheduleUpdateOnFiber(root, fiber, true);
 }
 
 /**
