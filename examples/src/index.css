@@ -83,3 +83,23 @@ button:focus-visible {
       background-color: #f9f9f9;
    }
 }
+
+.red {
+   color: red;
+}
+
+.yellow_border {
+   border-radius: 5px;
+   border: 1px solid black;
+   background-color: yellow;
+}
+
+.yellow {
+   color: yellow;
+}
+
+.red_border {
+   border-radius: 5px;
+   border: 1px solid black;
+   background-color: red;
+}

@@ -19,16 +19,33 @@ let workInProgressRoot: FiberRoot | null = null;
 
 /**
  * 调度更新：页面的初次渲染、类组件的 setState|forceUpdate、函数组件 setState 都会走到更新，调用该函数
- * @param root
- * @param fiber
+ * @param root 根 fiberRoot
+ * @param fiber 当前的 fiber
+ * @param isRenderPhaseUpdate 是否是渲染阶段更新
  */
-export function scheduleUpdateOnFiber(root: FiberRoot, fiber: Fiber) {
+export function scheduleUpdateOnFiber(
+   root: FiberRoot,
+   fiber: Fiber,
+   isRenderPhaseUpdate: boolean
+) {
    workInProgressRoot = root;
    workInProgress = fiber;
 
-   ensureRootIsScheduled(root);
+   if (isRenderPhaseUpdate) {
+      //? 渲染阶段更新
+      queueMicrotask(() => {
+         performConcurrentWorkOnRoot(root);
+      });
+   } else {
+      // 挂载阶段
+      ensureRootIsScheduled(root);
+   }
 }
 
+/**
+ * 并发工作：页面初次渲染，类组件、函数组件的状态更新
+ * @param root
+ */
 export function performConcurrentWorkOnRoot(root: FiberRoot) {
    //? 1. render，构建 fiber 树 > VDOM
    //> 包括了两个阶段：beginWork | completedWork
@@ -41,6 +58,10 @@ export function performConcurrentWorkOnRoot(root: FiberRoot) {
    commitRoot(root);
 }
 
+/**
+ * 提交根 fiber
+ * @param root
+ */
 function commitRoot(root: FiberRoot) {
    //? 1. begin
    const previousExecutionContext = executionContext;
@@ -54,6 +75,10 @@ function commitRoot(root: FiberRoot) {
    workInProgressRoot = null;
 }
 
+/**
+ * 同步渲染：页面初次渲染、类组件的 setState|forceUpdate、函数组件 setState
+ * @param root
+ */
 function renderRootSync(root: FiberRoot) {
    //? 1. render begining
    const previousExecutionContext = executionContext;
