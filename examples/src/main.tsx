@@ -27,20 +27,24 @@ import "./index.css";
 
 function FunctionComponent({ name }: { name: string }) {
    const [count, setCount] = useReducer((x: number) => x + 1, 0);
+   //    const arr = count % 2 === 0 ? [0, 1, 2, 3, 4, 5] : [0, 1, 2, 3, 4];
+   const arr = count % 2 === 0 ? [0, 1, 2, 3, 4, 5] : [0, 1, 3, 4, 5];
 
    return (
       <div className="border">
-         {count % 2 === 0 ? (
-            <button
-               onClick={() => {
-                  setCount();
-               }}
-            >
-               {count}
-            </button>
-         ) : (
-            <span onClick={() => setCount()}>react</span>
-         )}
+         <h2>Hi! {name}</h2>
+         <button
+            onClick={() => {
+               setCount();
+            }}
+         >
+            {count}
+         </button>
+         <ul>
+            {arr.map((i) => (
+               <li key={"li" + i}>{i}</li>
+            ))}
+         </ul>
       </div>
    );
 }
