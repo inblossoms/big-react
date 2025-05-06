@@ -7,7 +7,7 @@ import {
    createFiberFromText,
    createWorkInProgress,
 } from "./ReactFiber";
-import { isArray, isNumber, isString } from "shared/utils";
+import { isArray, isNumber, isObject, isString } from "shared/utils";
 import { HostText } from "./ReactWorkTags";
 
 type ChildReconciler = (
@@ -338,7 +338,7 @@ function createChildReconciler(
       if (isText(newChild)) {
          const matchedFiber = existingChildren.get(newIdx) || null;
          return updateTextNode(returnFiber, matchedFiber, String(newChild));
-      } else {
+      } else if (isObject(newChild) && newChild !== null) {
          const matchedFiber =
             existingChildren.get(
                newChild.key === null ? newIdx : newChild.key
@@ -346,6 +346,8 @@ function createChildReconciler(
 
          return updateElement(returnFiber, matchedFiber, newChild);
       }
+
+      return null;
    }
 
    /**

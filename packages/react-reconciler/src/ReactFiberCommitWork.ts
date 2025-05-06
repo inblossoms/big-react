@@ -98,10 +98,7 @@ function commitPlacement(finishedWork: Fiber) {
       //* 所以需要根据 finishedWork 的 index 来决定插入的位置
       //* 通过寻找 finishedWork.sibling 且该兄弟节点是一个已更新完成，页面上存在的 dom 节点。由于该 dom 节点不会在此轮发生移动，所以将会确保插入的位置是正确的
       const before = getHostSibling(finishedWork);
-      console.log(
-         `🧠 [getHostSibling] \x1b[91mFile: ReactFiberCommitWork.ts\x1b[0m, \x1b[32mLine: 101\x1b[0m, Message: `,
-         before
-      );
+
       insertOrAppendPlacementNode(finishedWork, before, parent);
    } else {
       let kid = finishedWork.child;

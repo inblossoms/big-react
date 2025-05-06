@@ -36,7 +36,7 @@ function FunctionComponent({ name }: { name: string }) {
    const [num, setNum] = useState(1);
 
    //    const arr = count % 2 === 0 ? [0, 1, 2, 3, 4, 5] : [0, 1, 2, 3, 4];
-   const arr = count % 2 === 0 ? [0, 1, 2, 3, 4, 5] : [3, 2, 4, 0, 5, 1];
+   const arr = count % 2 === 0 ? [0, 1, 2] : [3, 5, 1];
 
    const _cls = count % 2 === 0 ? "red yellow_border" : "yellow red_border";
 
@@ -62,6 +62,9 @@ function FunctionComponent({ name }: { name: string }) {
                <li key={"li" + i}>{i}</li>
             ))}
          </ul>
+         {num % 2 === 0 ? <div>null</div> : null}
+         {num % 2 === 0 ? <div>undefined</div> : undefined}
+         {num % 2 === 0 && <div>boolean</div>}
       </div>
    );
 }
