@@ -87,13 +87,22 @@ function commitReconciliationEffects(finishedWork: Fiber) {
 function commitPlacement(finishedWork: Fiber) {
    if (finishedWork.stateNode && isHostParent(finishedWork)) {
       const parentFiber = getHostParentFiber(finishedWork);
-      const currentFiber = finishedWork.stateNode;
+      const currentFiberNode = finishedWork.stateNode;
       let parent = parentFiber.stateNode;
 
       if (parent.containerInfo) {
          parent = parent.containerInfo;
       }
-      parent.appendChild(currentFiber);
+
+      //* 由于之前更新节点的做法都是采用 appendChild，导致会永远将节点放置在末尾，所以当更新的节点需要处于 fiber 树种的某个位置时，这种做法是错误的
+      //* 所以需要根据 finishedWork 的 index 来决定插入的位置
+      //* 通过寻找 finishedWork.sibling 且该兄弟节点是一个已更新完成，页面上存在的 dom 节点。由于该 dom 节点不会在此轮发生移动，所以将会确保插入的位置是正确的
+      const before = getHostSibling(finishedWork);
+      console.log(
+         `🧠 [getHostSibling] \x1b[91mFile: ReactFiberCommitWork.ts\x1b[0m, \x1b[32mLine: 101\x1b[0m, Message: `,
+         before
+      );
+      insertOrAppendPlacementNode(finishedWork, before, parent);
    } else {
       let kid = finishedWork.child;
       while (kid !== null) {
@@ -164,4 +173,63 @@ function isHostParent(fiber: Fiber): boolean {
     * - HostText：文本节点，不存在子节点
     */
    return fiber.tag === HostComponent || fiber.tag === HostRoot;
+}
+
+/**
+ * 获取兄弟 DOM 节点
+ * @param finishedWork
+ */
+function getHostSibling(finishedWork: Fiber) {
+   let node = finishedWork;
+   silbling: while (true) {
+      // 通过 label 语法跳出到此位置，则表示之前的节点不满足要求
+      while (node.sibling === null) {
+         //! 无有效子节点且不存在兄弟节点，则尝试寻找父级 dom 节点
+         if (node.return === null || isHostParent(node.return)) {
+            return null;
+         }
+         node = node.return;
+      }
+
+      node = node.sibling as Fiber;
+      while (!isHost(node)) {
+         //? Flag Placement: 表示新增插入 | 移动位置
+         // 需要确保找到的节点是一个稳定的节点，所以不使用 Placement 类型节点
+         if (node.flags & Placement) {
+            continue silbling;
+         }
+
+         //! 查找有效子节点
+         if (node.child === null) {
+            continue silbling;
+         } else {
+            node = node.child;
+         }
+      }
+
+      // 可以执行到此位置，则表示内存循环并未判定此时也未跳出到 sibling 外层循环
+      // 那么此时的目标节点存在 stateNode 属性，则表示该节点是一个真实的 DOM: HostComponent | HostText 节点
+      // 所以可以返回该节点
+      if (!(node.flags & Placement)) {
+         return node.stateNode;
+      }
+   }
+}
+
+/**
+ * 插入或追加 DOM 节点
+ * @param node 需要插入或追加的节点
+ * @param before 插入位置
+ * @param parent 父级 dom 元素
+ */
+function insertOrAppendPlacementNode(
+   node: Fiber,
+   before: Element | null,
+   parent: Element
+) {
+   if (before) {
+      parent.insertBefore(getStateNode(node), before);
+   } else {
+      parent.appendChild(getStateNode(node));
+   }
 }
