@@ -28,7 +28,7 @@ import "./index.css";
 function FunctionComponent({ name }: { name: string }) {
    const [count, setCount] = useReducer((x: number) => x + 1, 0);
    //    const arr = count % 2 === 0 ? [0, 1, 2, 3, 4, 5] : [0, 1, 2, 3, 4];
-   const arr = count % 2 === 0 ? [0, 1, 2, 3, 4, 5] : [0, 1, 3, 4, 5];
+   const arr = count % 2 === 0 ? [0, 1, 2, 3, 4, 5] : [3, 2, 4, 0, 5, 1];
 
    return (
       <div className="border">
