@@ -10,5 +10,6 @@ export {
    useMemo,
    useCallback,
    memo,
+   useRef,
 } from "../packages/react/index.ts";
 export * as ReactDOM from "../packages/react-dom/client.ts";

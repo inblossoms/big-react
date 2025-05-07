@@ -158,6 +158,17 @@ export function useCallback<T>(callback: T, deps: any[] | void | null): T {
    return callback;
 }
 
+export function useRef<T>(initialValue: T): { current: T } {
+   const hook = updateWorkInProgressHook();
+
+   // === null 说明是初次渲染
+   if (currentHook === null) {
+      hook.memoizedState = { current: initialValue };
+   }
+
+   return hook.memoizedState;
+}
+
 export function memo() {}
 
 /**
