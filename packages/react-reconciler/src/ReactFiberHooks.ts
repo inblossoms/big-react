@@ -136,6 +136,30 @@ export function useMemo<T>(nextCreate: () => T, deps: any[] | void | null): T {
    return nextValue;
 }
 
+export function useCallback<T>(callback: T, deps: any[] | void | null): T {
+   const hook: Hook = updateWorkInProgressHook();
+   const nextDeps = deps === undefined ? null : deps;
+
+   const prevState = hook.memoizedState;
+
+   if (prevState !== null) {
+      if (nextDeps !== null) {
+         // 存在上一次的缓存值且依赖项存在
+         const prevDeps = prevState[1];
+         if (areHookInputsEqual(nextDeps, prevDeps)) {
+            // 依赖项未发生变化，直接返回上一次的缓存值
+            return prevState[0];
+         }
+      }
+   }
+
+   hook.memoizedState = [callback, nextDeps];
+
+   return callback;
+}
+
+export function memo() {}
+
 /**
  * 检查 hook 依赖是否发生了变化
  * @param nextProps 更新后的依赖数据

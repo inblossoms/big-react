@@ -4,4 +4,6 @@ export {
    useReducer,
    useState,
    useMemo,
+   useCallback,
+   memo,
 } from "react-reconciler/src/ReactFiberHooks.ts";
