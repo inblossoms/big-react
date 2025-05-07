@@ -6,7 +6,7 @@ import {
    useReducer,
    useMemo,
    useCallback,
-   memo,
+   useRef,
 } from "../which-react";
 import "./index.css";
 
@@ -72,56 +72,56 @@ import "./index.css";
 //    );
 // }
 
-function FunctionComponent({ name }: { name: string }) {
-   const [count, setCount] = useReducer((x: number) => x + 1, 0);
-   const [num, setNum] = useState(0);
+// function FunctionComponent({ name }: { name: string }) {
+//    const [count, setCount] = useReducer((x: number) => x + 1, 0);
+//    const [num, setNum] = useState(0);
 
-   const addClick = useCallback(() => {
-      console.log("useCallbak");
-      let sum = 0;
+//    const addClick = useCallback(() => {
+//       console.log("useCallbak");
+//       let sum = 0;
 
-      for (let i = 0; i < count * 10; i++) {
-         sum += i;
-      }
+//       for (let i = 0; i < count * 10; i++) {
+//          sum += i;
+//       }
 
-      return sum;
-   }, [count]);
+//       return sum;
+//    }, [count]);
 
-   const expensive = useMemo(() => {
-      console.log("compute");
-      //   let sum = 0;
+//    const expensive = useMemo(() => {
+//       console.log("compute");
+//       //   let sum = 0;
 
-      //   for (let i = 0; i < count * 10; i++) {
-      //      sum += i;
-      //   }
+//       //   for (let i = 0; i < count * 10; i++) {
+//       //      sum += i;
+//       //   }
 
-      return addClick();
-   }, [addClick]);
+//       return addClick();
+//    }, [addClick]);
 
-   return (
-      <div className="border">
-         <h2>Hi! {name}</h2>
+//    return (
+//       <div className="border">
+//          <h2>Hi! {name}</h2>
 
-         <p>{expensive}</p>
-         <button
-            onClick={() => {
-               setCount();
-            }}
-         >
-            {count}
-         </button>
-         <button
-            onClick={() => {
-               setNum(num + 1);
-            }}
-         >
-            {num}
-         </button>
+//          <p>{expensive}</p>
+//          <button
+//             onClick={() => {
+//                setCount();
+//             }}
+//          >
+//             {count}
+//          </button>
+//          <button
+//             onClick={() => {
+//                setNum(num + 1);
+//             }}
+//          >
+//             {num}
+//          </button>
 
-         {/* <Child addClick={addClick} /> */}
-      </div>
-   );
-}
+//          {/* <Child addClick={addClick} /> */}
+//       </div>
+//    );
+// }
 
 // memo 允许组件在 props 没有发生变化的情况下跳过重新渲染
 // const Child = memo(({addClick}: {addClick: () => number)=> {
@@ -145,7 +145,40 @@ function FunctionComponent({ name }: { name: string }) {
 //       <h2 className="border">ooooops ....</h2>
 //    </div>
 // );
+function FunctionComponent({ name }: { name: string }) {
+   const [count, setCount] = useReducer((x: number) => x + 1, 0);
+   const [num, setNum] = useState(0);
 
+   const ref = useRef(0);
+
+   function handleClick() {
+      ref.current = ref.current + 1;
+      alert(`You clicked ${ref.current} times!`);
+   }
+
+   return (
+      <div className="border">
+         <h2>Hi! {name}</h2>
+
+         <button
+            onClick={() => {
+               setCount();
+            }}
+         >
+            {count}
+         </button>
+         <button
+            onClick={() => {
+               setNum(num + 1);
+            }}
+         >
+            {num}
+         </button>
+
+         <button onClick={handleClick}>Click me</button>
+      </div>
+   );
+}
 // ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 //   <>{fragment}</>
 // );
