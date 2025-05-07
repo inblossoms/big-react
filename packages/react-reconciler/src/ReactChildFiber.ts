@@ -329,6 +329,14 @@ function createChildReconciler(
       return resultingFirstChild;
    }
 
+   /**
+    * 从 Map 中获取对应的 fiber
+    * @param existingChildren
+    * @param returnFiber
+    * @param newIdx
+    * @param newChild
+    * @returns
+    */
    function updateFromMap(
       existingChildren: Map<string | number, Fiber>,
       returnFiber: Fiber,
