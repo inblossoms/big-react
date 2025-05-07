@@ -10,5 +10,5 @@ export function updateContainer(element: ReactNodeList, container: FiberRoot) {
    const root = container;
 
    //? 2. 调度更新
-   scheduleUpdateOnFiber(container, current);
+   scheduleUpdateOnFiber(container, current, true);
 }

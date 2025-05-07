@@ -11,5 +11,7 @@ export {
    useCallback,
    memo,
    useRef,
+   useEffect,
+   useLayoutEffect,
 } from "../packages/react/index.ts";
 export * as ReactDOM from "../packages/react-dom/client.ts";
