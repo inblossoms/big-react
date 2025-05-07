@@ -8,5 +8,7 @@ export {
    useReducer,
    useState,
    useMemo,
+   useCallback,
+   memo,
 } from "../packages/react/index.ts";
 export * as ReactDOM from "../packages/react-dom/client.ts";
