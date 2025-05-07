@@ -2,6 +2,8 @@ import { isFunction } from "shared/utils";
 import { scheduleUpdateOnFiber } from "./ReactFiberWorkLoop";
 import type { Fiber, FiberRoot } from "./ReactInternalTypes";
 import { HostRoot } from "./ReactWorkTags";
+import { Flags, Passive, Update } from "./ReactFiberFlags";
+import { HookFlags, HookLayout, HookPassive } from "./ReactHookEffectTags";
 
 // 当前正在工作的函数组件 Fiber
 let currentlyRenderingFiber: Fiber | null = null;
@@ -12,7 +14,7 @@ let currentHook: Hook | null = null;
 
 /**
  * 更新工作中的 hook：返回当前 hook <useState> 并构建 hook 链表
- * @returns
+ * @returns 返回当前工作的 hook
  */
 function updateWorkInProgressHook(): Hook {
    let hook: Hook;
@@ -52,6 +54,12 @@ function updateWorkInProgressHook(): Hook {
    return hook;
 }
 
+/**
+ * 使用 hooks 渲染函数组件
+ * @param current 当前 fiber 节点
+ * @param workInProgress 工作中的 fiber 节点
+ * @returns 返回函数组件的子元素
+ */
 export function renderWithHooks(
    current: Fiber | null,
    workInProgress: Fiber
@@ -60,6 +68,7 @@ export function renderWithHooks(
    currentlyRenderingFiber = workInProgress;
 
    workInProgress.memoizedState = null; // 更新每一个函数组件的 memoizedState hooks 链表
+   workInProgress.updateQueue = null;
 
    //> 函数组件：type 为组件本身，pendingProps 为即将用于更新的 props
    let children = type(pendingProps);
@@ -70,6 +79,13 @@ export function renderWithHooks(
    return children;
 }
 
+/**
+ * 使用 reducer 管理状态
+ * @param reducer reducer 函数，用于计算新的状态
+ * @param initialArgs 初始状态或初始状态的计算函数
+ * @param init 可选的初始化函数，用于计算初始状态
+ * @returns 返回当前状态和 dispatch 函数
+ */
 export function useReducer<S, I, A>(
    reducer: ((state: S, action: A) => S) | null,
    initialArgs: I,
@@ -105,6 +121,11 @@ export function useReducer<S, I, A>(
    return [hook.memoizedState, dispatch];
 }
 
+/**
+ * 使用状态管理
+ * @param initialState 初始状态或初始状态的计算函数
+ * @returns 返回当前状态和更新函数
+ */
 export function useState<S>(initialState: (() => S) | S) {
    const init = isFunction(initialState)
       ? (initialState as () => S)()
@@ -112,6 +133,12 @@ export function useState<S>(initialState: (() => S) | S) {
    return useReducer(null, init);
 }
 
+/**
+ * 缓存计算结果
+ * @param nextCreate 创建值的函数
+ * @param deps 依赖项数组
+ * @returns 返回缓存的值
+ */
 export function useMemo<T>(nextCreate: () => T, deps: any[] | void | null): T {
    const hook: Hook = updateWorkInProgressHook();
    const nextDeps = deps === undefined ? null : deps;
@@ -136,6 +163,12 @@ export function useMemo<T>(nextCreate: () => T, deps: any[] | void | null): T {
    return nextValue;
 }
 
+/**
+ * 缓存回调函数
+ * @param callback 需要缓存的回调函数
+ * @param deps 依赖项数组
+ * @returns 返回缓存的回调函数
+ */
 export function useCallback<T>(callback: T, deps: any[] | void | null): T {
    const hook: Hook = updateWorkInProgressHook();
    const nextDeps = deps === undefined ? null : deps;
@@ -158,6 +191,11 @@ export function useCallback<T>(callback: T, deps: any[] | void | null): T {
    return callback;
 }
 
+/**
+ * 创建一个可变的引用对象
+ * @param initialValue 初始值
+ * @returns 返回一个包含 current 属性的对象
+ */
 export function useRef<T>(initialValue: T): { current: T } {
    const hook = updateWorkInProgressHook();
 
@@ -169,7 +207,115 @@ export function useRef<T>(initialValue: T): { current: T } {
    return hook.memoizedState;
 }
 
+/**
+ * 用于优化组件渲染的 HOC
+ */
 export function memo() {}
+
+/**
+ * 在 DOM 更新后同步执行副作用
+ * @param create 副作用函数
+ * @param deps 依赖项数组
+ */
+export function useLayoutEffect(
+   create: () => (() => void) | void, // alias: setup、effect
+   deps: any[] | void | null
+) {
+   return updateEffectImpl(Update, HookLayout, create, deps);
+}
+
+/**
+ * 在 DOM 更新后异步执行副作用
+ * @param create 副作用函数
+ * @param deps 依赖项数组
+ */
+export function useEffect(
+   create: () => (() => void) | void, // alias: setup、effect
+   deps: any[] | void | null
+) {
+   return updateEffectImpl(Passive, HookPassive, create, deps);
+}
+
+/**
+ * 更新 effect 的实现，存储 effect 的创建函数和依赖项
+ * @param fiberFlags 执行 effect 的时机
+ * @param hookFlag hook 的标记
+ * @param create 执行 effect 的函数
+ * @param deps 依赖项
+ */
+function updateEffectImpl(
+   fiberFlags: Flags,
+   hookFlag: HookFlags,
+   create: () => (() => void) | void,
+   deps: any[] | void | null
+) {
+   const hook = updateWorkInProgressHook();
+   const nextDeps = deps === undefined ? null : deps;
+
+   //? 检查依赖项是否发生变化
+   if (currentHook !== null /*老 hook 存在即组件更新阶段*/) {
+      if (nextDeps !== null) {
+         const prevDeps = hook.memoizedState.deps;
+         if (prevDeps !== null) {
+            if (areHookInputsEqual(nextDeps, prevDeps)) {
+               return;
+            }
+         }
+      }
+   }
+   currentlyRenderingFiber!.flags |= fiberFlags; // 将对应的类型添加到 fiber
+
+   hook.memoizedState = pushEffect(hookFlag, create, nextDeps);
+}
+
+/**
+ * 存储 effect 并添加 effect 到链表中
+ * @param tag effect 的类型
+ * @param create effect 的创建函数
+ * @param deps effect 的依赖项
+ * @returns
+ */
+function pushEffect(
+   tag: HookFlags,
+   create: () => (() => void) | void,
+   deps: any[] | void | null
+) {
+   const effect: Effect = {
+      tag,
+      create,
+      deps,
+      next: null,
+   };
+
+   //* 构建 effect 链表
+   let componentUpdateQueue = currentlyRenderingFiber!.updateQueue;
+
+   if (componentUpdateQueue === null) {
+      // 此时的 effect 是第一个，做为 effect 链表的头节点
+      componentUpdateQueue = {
+         lastEffect: null,
+      };
+
+      currentlyRenderingFiber!.updateQueue = componentUpdateQueue;
+
+      componentUpdateQueue.lastEffect = effect.next = effect;
+   } else {
+      const lastEffect = componentUpdateQueue.lastEffect;
+      const firstEffect = lastEffect.next;
+
+      // 添加新 effect 到链表
+      if (firstEffect !== null) {
+         lastEffect.next = effect;
+         componentUpdateQueue.lastEffect = effect;
+         effect.next = firstEffect;
+      } else {
+         lastEffect.next = effect;
+         componentUpdateQueue.lastEffect = effect;
+      }
+   }
+
+   return effect;
+}
 
 /**
  * 检查 hook 依赖是否发生了变化
@@ -242,8 +388,8 @@ function dispatchReducerAction<S, I, A>(
 
 /**
  * 获取 fiber 的根节点
- * @param sourceFiber
- * @returns
+ * @param sourceFiber 源 fiber 节点
+ * @returns 返回 fiber 树的根节点
  */
 function getRootForUpdateFiber(sourceFiber: Fiber): FiberRoot {
    let node: Fiber | null = sourceFiber;
@@ -259,6 +405,13 @@ function getRootForUpdateFiber(sourceFiber: Fiber): FiberRoot {
 type Hook = {
    memoizedState: any;
    next: null | Hook;
+};
+
+type Effect = {
+   tag: HookFlags;
+   create: () => (() => void) | void;
+   deps: any[] | void | null;
+   next: null | Effect;
 };
 
 type Dispatch<A> = (action: A) => void;

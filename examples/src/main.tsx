@@ -7,6 +7,8 @@ import {
    useMemo,
    useCallback,
    useRef,
+   useEffect,
+   useLayoutEffect,
 } from "../which-react";
 import "./index.css";
 
@@ -149,16 +151,25 @@ function FunctionComponent({ name }: { name: string }) {
    const [count, setCount] = useReducer((x: number) => x + 1, 0);
    const [num, setNum] = useState(0);
 
-   const ref = useRef(0);
+   //    const ref = useRef(0);
+   //    function handleClick() {
+   //       ref.current = ref.current + 1;
+   //       alert(`You clicked ${ref.current} times!`);
+   //    }
 
-   function handleClick() {
-      ref.current = ref.current + 1;
-      alert(`You clicked ${ref.current} times!`);
-   }
+   useLayoutEffect(() => {
+      console.log("useLayoutEffect");
+   }, [count]);
+
+   useEffect(() => {
+      console.log("useEffect");
+   }, [num]);
 
    return (
       <div className="border">
          <h2>Hi! {name}</h2>
+
+         <Child count={count} num={num} />
 
          <button
             onClick={() => {
@@ -175,9 +186,21 @@ function FunctionComponent({ name }: { name: string }) {
             {num}
          </button>
 
-         <button onClick={handleClick}>Click me</button>
+         {/* <button onClick={handleClick}>Click me</button> */}
       </div>
    );
+}
+
+function Child({ count, num }: { count: string; num: string }) {
+   useLayoutEffect(() => {
+      console.log("Child: useLayoutEffect");
+   }, [count]);
+
+   useEffect(() => {
+      console.log("Child: useEffect");
+   }, [num]);
+
+   return <div>Child</div>;
 }
 // ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 //   <>{fragment}</>

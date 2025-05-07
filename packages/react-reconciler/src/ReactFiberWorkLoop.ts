@@ -3,7 +3,11 @@ import { ensureRootIsScheduled } from "./ReactFiberRootScheduler";
 import { createWorkInProgress } from "./ReactFiber";
 import { completeWork } from "./ReactFiberCompleteWork";
 import { beginWork } from "./ReactFiberBeginWork";
-import { commitMutationEffects } from "./ReactFiberCommitWork";
+import {
+   commitMutationEffects,
+   flushPassiveEffects,
+} from "./ReactFiberCommitWork";
+import { NormalPriority, Scheduler } from "scheduler/index";
 
 type ExecutionContext = number;
 
@@ -31,6 +35,10 @@ export function scheduleUpdateOnFiber(
    workInProgressRoot = root;
    workInProgress = fiber;
 
+   console.log(
+      `🧠 [] \x1b[91mFile: ReactFiberWorkLoop.ts\x1b[0m, \x1b[32mLine: 34\x1b[0m, Message: `,
+      root
+   );
    if (isRenderPhaseUpdate) {
       //? 渲染阶段更新
       queueMicrotask(() => {
@@ -67,8 +75,13 @@ function commitRoot(root: FiberRoot) {
    const previousExecutionContext = executionContext;
    executionContext |= CommitContext;
 
-   //? 2. mutation：渲染 DOM 元素
+   //? 2. mutataion：渲染 DOM 元素， < 页面初次渲染 >
    commitMutationEffects(root, root.finishedWork as Fiber); // Fiber: HostRoot 3
+   //? 2.1 passive effect 阶段，执行 passive effect，不参与页面的同步渲染阶段
+   Scheduler.scheduleCallback(NormalPriority, () => {
+      flushPassiveEffects(root.finishedWork as Fiber);
+      return null;
+   });
 
    //? 3. finished
    executionContext = previousExecutionContext;

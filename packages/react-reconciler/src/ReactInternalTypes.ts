@@ -63,6 +63,9 @@ export type Fiber = {
 
    // 记录要删除的子节点
    deletions: Array<Fiber> | null;
+
+   // 记录 effect 相关信息
+   updateQueue: any;
 };
 
 export class FiberNode {
@@ -81,6 +84,7 @@ export class FiberNode {
    flags: number; // 标记当前组件的 Effect 相关副作用
    alternate: FiberNode | null; // 缓存上一次渲染时使用的 fiber
    deletions: Array<Fiber> | null; // 记录要删除的子节点
+   updateQueue: any; // 记录 effect 相关信息
 
    constructor(tag: WorkTag, pendingProps: unknown, key: null | string) {
       this.tag = tag;
@@ -98,5 +102,6 @@ export class FiberNode {
       this.flags = NoFlags;
       this.alternate = null;
       this.deletions = null;
+      this.updateQueue = null;
    }
 }
