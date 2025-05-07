@@ -112,12 +112,75 @@ export function useState<S>(initialState: (() => S) | S) {
    return useReducer(null, init);
 }
 
+export function useMemo<T>(nextCreate: () => T, deps: any[] | void | null): T {
+   const hook: Hook = updateWorkInProgressHook();
+   const nextDeps = deps === undefined ? null : deps;
+
+   const prevState = hook.memoizedState;
+
+   if (prevState !== null) {
+      if (nextDeps !== null) {
+         // 存在上一次的缓存值且依赖项存在
+         const prevDeps = prevState[1];
+         if (areHookInputsEqual(nextDeps, prevDeps)) {
+            // 依赖项未发生变化，直接返回上一次的缓存值
+            return prevState[0];
+         }
+      }
+   }
+
+   const nextValue = nextCreate();
+
+   hook.memoizedState = [nextValue, nextDeps];
+
+   return nextValue;
+}
+
+/**
+ * 检查 hook 依赖是否发生了变化
+ * @param nextProps 更新后的依赖数据
+ * @param prevProps 上一次更新前的依赖数据
+ */
+function areHookInputsEqual(
+   nextProps: Array<any>,
+   prevProps: Array<any> | null
+): boolean {
+   if (prevProps === null) {
+      return false;
+   }
+
+   for (let i = 0; i < prevProps.length; i++) {
+      const prev = prevProps[i];
+      const next = nextProps[i];
+
+      if (Object.is(prev, next)) {
+         continue;
+      }
+
+      return false;
+   }
+
+   // 执行这个位置意味着依赖项前后完全一致
+   return true;
+}
+
+/**
+ * 清理操作：结束渲染 hooks
+ */
 function finishRenderingHooks() {
    currentlyRenderingFiber = null;
    workInProgressHook = null;
    currentHook = null;
 }
 
+/**
+ * 处理 reducer 类型的 action 分发
+ * @param fiber 当前工作的 fiber 节点
+ * @param hook 当前工作的 hook
+ * @param reducer reducer 函数
+ * @param action 要分发的 action
+ * @returns 返回新的状态
+ */
 function dispatchReducerAction<S, I, A>(
    fiber: Fiber,
    hook: Hook,
