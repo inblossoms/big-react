@@ -1,6 +1,7 @@
 import { isNumber, isString } from "shared/utils";
 import {
    ClassComponent,
+   ContextConsumer,
    ContextProvider,
    Fragment,
    FunctionComponent,
@@ -23,6 +24,7 @@ export function completeWork(
    switch (workInProgress.tag) {
       case ClassComponent:
       case FunctionComponent:
+      case ContextConsumer:
       case Fragment:
       case HostRoot:
          return null;

@@ -209,12 +209,13 @@ function Child() {
 
    return (
       <div className={"border " + theme}>
-         Child:
+         useContext:
          <span>{count}</span>
          <ThemeContext.Consumer>
             {(theme) => {
                return (
                   <div className={theme}>
+                     consumer:
                      <CountContext.Consumer>
                         {(value) => {
                            return <span>{value}</span>;
