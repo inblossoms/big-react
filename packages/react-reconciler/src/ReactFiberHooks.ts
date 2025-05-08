@@ -4,6 +4,8 @@ import type { Fiber, FiberRoot } from "./ReactInternalTypes";
 import { HostRoot } from "./ReactWorkTags";
 import { Flags, Passive, Update } from "./ReactFiberFlags";
 import { HookFlags, HookLayout, HookPassive } from "./ReactHookEffectTags";
+import { ReactContext } from "../../shared/ReactTypes";
+import { readContext } from "./ReactFiiberNewContext";
 
 // 当前正在工作的函数组件 Fiber
 let currentlyRenderingFiber: Fiber | null = null;
@@ -77,6 +79,15 @@ export function renderWithHooks(
    finishRenderingHooks();
 
    return children;
+}
+
+/**
+ * 使用上下文
+ * @param context
+ * @returns
+ */
+export function useContext<T>(context: ReactContext<T>): T {
+   return readContext(context);
 }
 
 /**

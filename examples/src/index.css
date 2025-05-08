@@ -65,6 +65,7 @@ button:focus-visible {
 }
 
 .border {
+   margin: 20px;
    padding: 10px;
    border: 1px solid #616161;
    border-radius: 5px;

@@ -13,5 +13,7 @@ export {
    useRef,
    useEffect,
    useLayoutEffect,
+   createContext,
+   useContext,
 } from "../packages/react/index.ts";
 export * as ReactDOM from "../packages/react-dom/client.ts";
