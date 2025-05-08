@@ -225,8 +225,22 @@ function Child() {
                );
             }}
          </ThemeContext.Consumer>
+         <ClassComponent />
       </div>
    );
+}
+
+class ClassComponent extends Component {
+   static contextType = CountContext;
+
+   render() {
+      return (
+         <div className="border">
+            contextType:
+            <span>{this.context as number}</span>
+         </div>
+      );
+   }
 }
 
 // function Child({ count, num }: { count: string; num: string }) {
