@@ -44,6 +44,7 @@ export function beginWork(
       `Unknown unit of work tag: ${workInProgress.tag}, this error is likely caused by a bug in React. Please file an issue.`
    );
 }
+
 function updateContextConsumer(current: Fiber | null, workInProgress: Fiber) {
    const context = workInProgress.type;
    const value = readContext(context);
@@ -139,12 +140,18 @@ function updateHostComponent(current: Fiber | null, workInProgress: Fiber) {
 function updateClassComponent(current: Fiber | null, workInProgress: Fiber) {
    const { type, pendingProps } = workInProgress;
 
-   const instance = new type(pendingProps);
-   workInProgress.stateNode = instance;
+   // contextType 是一个静态属性值，需要通过实例来访问：type.contextType
+   const context = readContext(type.contextType);
+   let instance = workInProgress.stateNode;
 
+   if (current === null) {
+      instance = new type(pendingProps);
+      workInProgress.stateNode = instance;
+   }
+
+   instance.context = context;
    // 调用render方法获取子元素
    const nextChildren = instance.render();
-
    // 将子元素转换为fiber节点
    reconcileChildren(current, workInProgress, nextChildren);
 
