@@ -7,11 +7,12 @@ import {
    ClassComponent,
    FunctionComponent,
    ContextProvider,
+   ContextConsumer,
 } from "./ReactWorkTags";
 import { Fiber } from "./ReactInternalTypes";
 import { isString, isNumber } from "shared/utils";
 import { renderWithHooks } from "./ReactFiberHooks";
-import { pushProvider } from "./ReactFiiberNewContext";
+import { pushProvider, readContext } from "./ReactFiiberNewContext";
 
 // 协调
 // 1. 根据 fiber 的类型，执行不同的逻辑
@@ -35,11 +36,25 @@ export function beginWork(
          return updateFunctionComponent(current, workInProgress);
       case ContextProvider:
          return updateContextProvider(current, workInProgress);
+      case ContextConsumer:
+         return updateContextConsumer(current, workInProgress);
    }
 
    throw new Error(
       `Unknown unit of work tag: ${workInProgress.tag}, this error is likely caused by a bug in React. Please file an issue.`
    );
+}
+function updateContextConsumer(current: Fiber | null, workInProgress: Fiber) {
+   const context = workInProgress.type;
+   const value = readContext(context);
+   //> workInProgress.pendingProps.children -> pendingProps 存储了用于组件的最新值
+   //> consumer 组件内会接收一个函数，而这个函数就是这里的 pendingProps.children
+   const render = workInProgress.pendingProps.children;
+   //> 将 craeteContext 提供的的值传递给这个回调
+   const newChildren = render(value);
+
+   reconcileChildren(current, workInProgress, newChildren);
+   return workInProgress.child;
 }
 
 function updateContextProvider(current: Fiber | null, workInProgress: Fiber) {

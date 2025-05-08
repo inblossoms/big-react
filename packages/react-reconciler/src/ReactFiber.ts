@@ -10,9 +10,14 @@ import {
    ClassComponent,
    FunctionComponent,
    ContextProvider,
+   ContextConsumer,
 } from "./ReactWorkTags";
 import { isFunction, isString } from "shared/utils";
-import { REACT_FRAGMENT_TYPE, REACT_PROVIDER_TYPE } from "shared/ReactSymbols";
+import {
+   REACT_CONTEXT_TYPE,
+   REACT_FRAGMENT_TYPE,
+   REACT_PROVIDER_TYPE,
+} from "shared/ReactSymbols";
 
 /**
  * 创建当前正在工作的 workInProgress 节点
@@ -110,6 +115,8 @@ export function createFiberFromTypeAndProps(
       fiberTag = Fragment;
    } else if (type.$$typeof === REACT_PROVIDER_TYPE) {
       fiberTag = ContextProvider;
+   } else if (type.$$typeof === REACT_CONTEXT_TYPE) {
+      fiberTag = ContextConsumer;
    }
 
    const fiber = createFiber(fiberTag, pendingProps, key);

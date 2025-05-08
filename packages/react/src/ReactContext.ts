@@ -14,7 +14,7 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
       _context: context,
    };
 
-   //    context.Consumer = context;
+   context.Consumer = context;
 
    return context;
 }
