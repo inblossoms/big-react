@@ -9,6 +9,8 @@ import {
    useRef,
    useEffect,
    useLayoutEffect,
+   createContext,
+   useContext,
 } from "../which-react";
 import "./index.css";
 
@@ -147,8 +149,12 @@ import "./index.css";
 //       <h2 className="border">ooooops ....</h2>
 //    </div>
 // );
+
+const CountContext = createContext(1);
+const ThemeContext = createContext("yellow");
+
 function FunctionComponent({ name }: { name: string }) {
-   const [count, setCount] = useReducer((x: number) => x + 1, 0);
+   const [count, setCount] = useReducer((x: number) => x + 1, 10);
    const [num, setNum] = useState(0);
 
    //    const ref = useRef(0);
@@ -157,19 +163,17 @@ function FunctionComponent({ name }: { name: string }) {
    //       alert(`You clicked ${ref.current} times!`);
    //    }
 
-   useLayoutEffect(() => {
-      console.log("useLayoutEffect");
-   }, [count]);
+   //    useLayoutEffect(() => {
+   //       console.log("useLayoutEffect");
+   //    }, [count]);
 
-   useEffect(() => {
-      console.log("useEffect");
-   }, [num]);
+   //    useEffect(() => {
+   //       console.log("useEffect");
+   //    }, [num]);
 
    return (
       <div className="border">
          <h2>Hi! {name}</h2>
-
-         <Child count={count} num={num} />
 
          <button
             onClick={() => {
@@ -185,23 +189,56 @@ function FunctionComponent({ name }: { name: string }) {
          >
             {num}
          </button>
-
+         <ThemeContext.Provider value="red">
+            <CountContext.Provider value={count}>
+               <CountContext.Provider value={count * 2}>
+                  <Child />
+               </CountContext.Provider>
+               <Child />
+            </CountContext.Provider>
+         </ThemeContext.Provider>
+         {/* <Child count={count} num={num} /> */}
          {/* <button onClick={handleClick}>Click me</button> */}
       </div>
    );
 }
 
-function Child({ count, num }: { count: string; num: string }) {
-   useLayoutEffect(() => {
-      console.log("Child: useLayoutEffect");
-   }, [count]);
+function Child() {
+   const count = useContext(CountContext);
+   const theme = useContext(ThemeContext);
 
-   useEffect(() => {
-      console.log("Child: useEffect");
-   }, [num]);
-
-   return <div>Child</div>;
+   return (
+      <div className={"border " + theme}>
+         Child:
+         <span>{count}</span>
+         <ThemeContext.Consumer>
+            {(theme) => {
+               return (
+                  <div className={theme}>
+                     <CountContext.Consumer>
+                        {(value) => {
+                           return <span>{value}</span>;
+                        }}
+                     </CountContext.Consumer>
+                  </div>
+               );
+            }}
+         </ThemeContext.Consumer>
+      </div>
+   );
 }
+
+// function Child({ count, num }: { count: string; num: string }) {
+//       useLayoutEffect(() => {
+//          console.log("Child: useLayoutEffect");
+//       }, [count]);
+
+//       useEffect(() => {
+//          console.log("Child: useEffect");
+//       }, [num]);
+
+//    return <div>Child</div>;
+// }
 // ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
 //   <>{fragment}</>
 // );

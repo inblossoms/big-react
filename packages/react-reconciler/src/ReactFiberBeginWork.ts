@@ -6,10 +6,12 @@ import {
    Fragment,
    ClassComponent,
    FunctionComponent,
+   ContextProvider,
 } from "./ReactWorkTags";
 import { Fiber } from "./ReactInternalTypes";
 import { isString, isNumber } from "shared/utils";
 import { renderWithHooks } from "./ReactFiberHooks";
+import { pushProvider } from "./ReactFiiberNewContext";
 
 // 协调
 // 1. 根据 fiber 的类型，执行不同的逻辑
@@ -31,11 +33,32 @@ export function beginWork(
          return updateClassComponent(current, workInProgress);
       case FunctionComponent:
          return updateFunctionComponent(current, workInProgress);
+      case ContextProvider:
+         return updateContextProvider(current, workInProgress);
    }
 
    throw new Error(
       `Unknown unit of work tag: ${workInProgress.tag}, this error is likely caused by a bug in React. Please file an issue.`
    );
+}
+
+function updateContextProvider(current: Fiber | null, workInProgress: Fiber) {
+   const context = workInProgress.type._context;
+   const value = workInProgress.pendingProps.value;
+
+   //    context._currentValue = value;
+
+   //? context provider 可以多层嵌套，那么如何访问到距离子组件最近的那个 provider ？
+   //> 通过一个栈结构来记录：context value，从而让后代组件消费
+   pushProvider(context, value);
+
+   reconcileChildren(
+      current,
+      workInProgress,
+      workInProgress.pendingProps.children
+   );
+
+   return workInProgress.child;
 }
 
 function updateHostFragment(current: Fiber | null, workInProgress: Fiber) {

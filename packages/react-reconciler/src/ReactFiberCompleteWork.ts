@@ -1,6 +1,7 @@
 import { isNumber, isString } from "shared/utils";
 import {
    ClassComponent,
+   ContextProvider,
    Fragment,
    FunctionComponent,
    HostComponent,
@@ -8,6 +9,7 @@ import {
    HostText,
 } from "./ReactWorkTags";
 import type { Fiber } from "./ReactInternalTypes";
+import { popProvider } from "./ReactFiiberNewContext";
 
 export function completeWork(
    current: Fiber | null,
@@ -24,7 +26,10 @@ export function completeWork(
       case Fragment:
       case HostRoot:
          return null;
-
+      case ContextProvider: {
+         popProvider(workInProgress.type._context);
+         return null;
+      }
       case HostComponent: {
          const { type } = workInProgress;
 

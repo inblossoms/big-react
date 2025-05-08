@@ -2,13 +2,7 @@ import { isHost } from "./ReactFiberCompleteWork";
 import { ChildDeletion, Passive, Placement, Update } from "./ReactFiberFlags";
 import { HookFlags, HookLayout, HookPassive } from "./ReactHookEffectTags";
 import { Fiber, FiberRoot } from "./ReactInternalTypes";
-import { createFiber } from "./ReactFiber";
-import {
-   FunctionComponent,
-   HostComponent,
-   HostRoot,
-   HostText,
-} from "./ReactWorkTags";
+import { FunctionComponent, HostComponent, HostRoot } from "./ReactWorkTags";
 
 /**
  * 处理 fiber 节点在 commit 阶段的 mutation 操作。
