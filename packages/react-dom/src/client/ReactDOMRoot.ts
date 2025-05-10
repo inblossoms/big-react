@@ -1,3 +1,4 @@
+import { listenToAllSupportedEvents } from "react-dom-bindings/src/events/DOMPluginEventSystem";
 import { updateContainer } from "react-reconciler/src/ReactFiberReconciler";
 import { createFiberRoot } from "react-reconciler/src/ReactFiberRoot";
 import type {
@@ -25,6 +26,7 @@ export function createRoot(container: Container): RootType {
    //? 1. 构建 fiber vdom tree
    const root: FiberRoot = createFiberRoot(container);
 
+   listenToAllSupportedEvents(container);
    return new (ReactDOMRoot as any)(root);
 }
 

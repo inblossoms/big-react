@@ -33,6 +33,9 @@
 			"react-reconciler/*": [
 				"packages/react-reconciler/*"
 			],
+			"react-dom-bindings/*": [
+				"packages/react-dom-bindings/*"
+			],
 			"scheduler/*": [
 				"packages/scheduler/*"
 			]

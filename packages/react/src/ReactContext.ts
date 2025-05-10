@@ -5,8 +5,8 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
    const context: ReactContext<T> = {
       $$typeof: REACT_CONTEXT_TYPE,
       _currentValue: defaultValue,
-      Provider: null,
-      Consumer: null,
+      Provider: null as any,
+      Consumer: null as any,
    };
 
    context.Provider = {

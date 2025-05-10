@@ -101,7 +101,7 @@ function finalizeInitialChildren(el: Element, prevProps: any, nextProps: any) {
          } else {
             // attribute: eg > class name
             if (propKey === "onClick") {
-               el.removeEventListener("click", prevProp);
+               //    el.removeEventListener("click", prevProp);
             } else {
                if (!(prevProp in nextProps)) {
                   (el as any)[propKey] = "";
@@ -123,7 +123,7 @@ function finalizeInitialChildren(el: Element, prevProps: any, nextProps: any) {
          } else {
             // attribute: eg > class name
             if (propKey === "onClick") {
-               el.addEventListener("click", nextProp);
+               //    el.addEventListener("click", nextProp);
             } else {
                (el as any)[propKey] = nextProp;
             }
