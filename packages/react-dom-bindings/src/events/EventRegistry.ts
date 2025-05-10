@@ -35,8 +35,4 @@ export function registerDirectEvent(
    dependencies.forEach((dependency) => {
       allNativeEvents.add(dependency);
    });
-   console.log(
-      `🧠 [allNativeEvents] \x1b[91mFile: EventRegistry.ts\x1b[0m, \x1b[32mLine: 38\x1b[0m, Message: `,
-      allNativeEvents
-   );
 }
