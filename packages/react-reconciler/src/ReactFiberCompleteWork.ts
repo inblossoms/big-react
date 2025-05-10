@@ -11,6 +11,10 @@ import {
 } from "./ReactWorkTags";
 import type { Fiber } from "./ReactInternalTypes";
 import { popProvider } from "./ReactFiiberNewContext";
+import {
+   precacheFiberNode,
+   updateFiberProps,
+} from "react-dom-bindings/src/client/ReactDOMComponentTree";
 
 export function completeWork(
    current: Fiber | null,
@@ -52,11 +56,18 @@ export function completeWork(
             //? 4. 返回子 fiber
             workInProgress.stateNode = instance;
          }
+
+         precacheFiberNode(workInProgress, workInProgress.stateNode);
+         updateFiberProps(workInProgress.stateNode, newProps);
          return null;
       }
 
       case HostText:
          workInProgress.stateNode = document.createTextNode(newProps);
+
+         precacheFiberNode(workInProgress, workInProgress.stateNode);
+         updateFiberProps(workInProgress.stateNode, newProps);
+
          return null;
    }
 

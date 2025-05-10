@@ -77,6 +77,7 @@ export type DOMEventName =
    | "reset"
    | "resize"
    | "scroll"
+   | "scrollend"
    | "seeked"
    | "seeking"
    | "select"
