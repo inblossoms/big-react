@@ -90,7 +90,7 @@ function updateHostFragment(current: Fiber | null, workInProgress: Fiber) {
  * @param workInProgress 新 fiber
  * @returns 返回子节点
  */
-function updateHostText(current: Fiber | null, workInProgress: Fiber) {
+function updateHostText() {
    return null;
 }
 
