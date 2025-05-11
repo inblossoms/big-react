@@ -324,14 +324,14 @@ const MouseEventInterface = {
 };
 
 /**
- * 基础合成事件构造函数
+ * 基础合成事件
  */
 export const SyntheticEvent = createSyntheticEvent(
    EventInterface as EventInterfaceType
 );
 
 /**
- * 鼠标合成事件构造函数
+ * 鼠标合成事件
  */
 export const SyntheticMouseEvent = createSyntheticEvent(
    MouseEventInterface as EventInterfaceType

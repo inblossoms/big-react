@@ -156,6 +156,8 @@ const ThemeContext = createContext("yellow");
 function FunctionComponent({ name }: { name: string }) {
    const [count, setCount] = useReducer((x: number) => x + 1, 10);
    const [num, setNum] = useState(0);
+   const [text, setText] = useState("hello");
+   const [textarea, setTextarea] = useState("hello textarea.");
 
    //    const ref = useRef(0);
    //    function handleClick() {
@@ -175,74 +177,105 @@ function FunctionComponent({ name }: { name: string }) {
       <div className="border">
          <h2>Hi! {name}</h2>
 
-         <button
+         {/* <button
             onClick={(e) => {
-               console.log(e);
+               console.log(
+                  `🧠 [onClick] \x1b[91mFile: main.tsx\x1b[0m, \x1b[32mLine: 182\x1b[0m, Message: `,
+                  e
+               );
                setCount();
             }}
          >
             {count}
-         </button>
+         </button> */}
          <button
-            onClick={() => {
+            onClick={(e) => {
+               console.log(
+                  `🧠 [onClick] \x1b[91mFile: main.tsx\x1b[0m, \x1b[32mLine: 182\x1b[0m, Message: `,
+                  e
+               );
                setNum(num + 1);
+            }}
+            onDoubleClick={() => {
+               console.log(
+                  `🧠 [onDoubleClick] \x1b[91mFile: main.tsx\x1b[0m, \x1b[32mLine: 182\x1b[0m, Message: `
+               );
             }}
          >
             {num}
          </button>
-         <ThemeContext.Provider value="red">
+
+         <p>{text}</p>
+         <input
+            value={text}
+            onInput={(e) => {
+               console.log(e);
+
+               setText(e.target.value);
+            }}
+         ></input>
+
+         <p>{textarea}</p>
+         <textarea
+            value={textarea}
+            onChange={(e) => {
+               setTextarea(e.target.value);
+            }}
+         ></textarea>
+
+         {/* <ThemeContext.Provider value="red">
             <CountContext.Provider value={count}>
                <CountContext.Provider value={count * 2}>
                   <Child />
                </CountContext.Provider>
                <Child />
             </CountContext.Provider>
-         </ThemeContext.Provider>
+         </ThemeContext.Provider> */}
          {/* <Child count={count} num={num} /> */}
          {/* <button onClick={handleClick}>Click me</button> */}
       </div>
    );
 }
 
-function Child() {
-   const count = useContext(CountContext);
-   const theme = useContext(ThemeContext);
+// function Child() {
+//    const count = useContext(CountContext);
+//    const theme = useContext(ThemeContext);
 
-   return (
-      <div className={"border " + theme}>
-         useContext:
-         <span>{count}</span>
-         <ThemeContext.Consumer>
-            {(theme) => {
-               return (
-                  <div className={theme}>
-                     consumer:
-                     <CountContext.Consumer>
-                        {(value) => {
-                           return <span>{value}</span>;
-                        }}
-                     </CountContext.Consumer>
-                  </div>
-               );
-            }}
-         </ThemeContext.Consumer>
-         <ClassComponent />
-      </div>
-   );
-}
+//    return (
+//       <div className={"border " + theme}>
+//          useContext:
+//          <span>{count}</span>
+//          <ThemeContext.Consumer>
+//             {(theme) => {
+//                return (
+//                   <div className={theme}>
+//                      consumer:
+//                      <CountContext.Consumer>
+//                         {(value) => {
+//                            return <span>{value}</span>;
+//                         }}
+//                      </CountContext.Consumer>
+//                   </div>
+//                );
+//             }}
+//          </ThemeContext.Consumer>
+//          <ClassComponent />
+//       </div>
+//    );
+// }
 
-class ClassComponent extends Component {
-   static contextType = CountContext;
+// class ClassComponent extends Component {
+//    static contextType = CountContext;
 
-   render() {
-      return (
-         <div className="border">
-            contextType:
-            <span>{this.context as number}</span>
-         </div>
-      );
-   }
-}
+//    render() {
+//       return (
+//          <div className="border">
+//             contextType:
+//             <span>{this.context as number}</span>
+//          </div>
+//       );
+//    }
+// }
 
 // function Child({ count, num }: { count: string; num: string }) {
 //       useLayoutEffect(() => {

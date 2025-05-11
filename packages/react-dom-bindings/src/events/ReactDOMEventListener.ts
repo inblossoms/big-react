@@ -31,7 +31,7 @@ import { ReactSyntheticEvent } from "./ReactSyntheticEventType";
 import { Fiber } from "../../../react-reconciler/src/ReactInternalTypes";
 
 /**
- * 创建带有优先级的事件监听器包装器
+ * 事件优先级分类：创建带有优先级的事件监听器包装器
  * @param targetContainer 目标容器
  * @param domEventName DOM 事件名称
  * @param eventSystemFlags 事件系统标志
@@ -46,13 +46,13 @@ export function createEventListenerWrapperWithPriority(
    const eventPriority = getEventPriority(domEventName);
    let listenerWrapper;
    switch (eventPriority) {
-      case DiscreteEventPriority:
+      case DiscreteEventPriority: //> 离散事件：点击、键盘、焦点事件
          listenerWrapper = dispatchDiscreteEvent;
          break;
-      case ContinuousEventPriority:
+      case ContinuousEventPriority: //> 连续事件（ContinuousEventPriority）： 鼠标移动、滚动等事件
          listenerWrapper = dispatchContinuousEvent;
          break;
-      case DefaultEventPriority:
+      case DefaultEventPriority: // 默认事件
       default:
          listenerWrapper = dispatchEvent;
          break;
@@ -132,25 +132,23 @@ export function dispatchEvent(
    targetContainer: EventTarget,
    nativeEvent: any //  AnyNativeEvent
 ): void {
-   if (domEventName === "click") {
-      const nativeEventTarget = nativeEvent.target;
-      // 通过 nativeEventTarget 获取到的 dom 节点，来获取其对应的 fiber 中存储的事件回调
-      const return_targetInst = getClosestInstanceFromNode(nativeEventTarget);
+   const nativeEventTarget = nativeEvent.target;
+   // 通过 nativeEventTarget 获取到的 dom 节点，来获取其对应的 fiber 中存储的事件回调
+   const return_targetInst = getClosestInstanceFromNode(nativeEventTarget);
 
-      const dispatchQueue: DispatchQueue = [];
+   const dispatchQueue: DispatchQueue = [];
 
-      extractEvents(
-         dispatchQueue,
-         domEventName,
-         return_targetInst,
-         nativeEvent,
-         nativeEventTarget,
-         eventSystemFlags,
-         targetContainer
-      );
+   extractEvents(
+      dispatchQueue,
+      domEventName,
+      return_targetInst,
+      nativeEvent,
+      nativeEventTarget,
+      eventSystemFlags,
+      targetContainer
+   );
 
-      processDispatchQueue(dispatchQueue, eventSystemFlags);
-   }
+   processDispatchQueue(dispatchQueue, eventSystemFlags);
 }
 
 /**
