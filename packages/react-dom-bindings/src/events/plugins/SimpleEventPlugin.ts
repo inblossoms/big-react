@@ -10,6 +10,7 @@ import {
    accumulateSinglePhaseListeners,
 } from "../DOMPluginEventSystem";
 import { IS_CAPTURE_PHASE, type EventSystemFlags } from "../EventSystemFlags";
+import { SyntheticEvent, SyntheticMouseEvent } from "../SyntheticEvent";
 
 function extractEvents(
    dispatchQueue: DispatchQueue,
@@ -24,6 +25,33 @@ function extractEvents(
    const reactName = topLevelEventsToReactNames.get(domEventName);
    if (reactName === undefined) {
       return;
+   }
+
+   let SyntheticEventCtor: any = SyntheticEvent;
+   switch (domEventName) {
+      case "click": {
+         // Firefox creates a click event on right mouse clicks. This removes the
+         // unwanted click events.
+         // TODO: Fixed in https://phabricator.services.mozilla.com/D26793. Can
+         // probably remove.
+         if ((nativeEvent as MouseEvent).button === 2) {
+            return;
+         }
+         SyntheticEventCtor = SyntheticMouseEvent;
+         break;
+      }
+      case "auxclick":
+      case "dblclick":
+      case "mousedown":
+      case "mousemove":
+      case "mouseup":
+      // TODO: Disabled elements should not respond to mouse events
+      case "mouseout":
+      case "mouseover":
+      case "contextmenu": {
+         SyntheticEventCtor = SyntheticMouseEvent;
+         break;
+      }
    }
 
    const inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0; // 如果是 scroll 事件，或者是 scrollend 事件，那么只会在冒泡阶段触发
@@ -43,7 +71,14 @@ function extractEvents(
    );
 
    if (listeners.length > 0) {
-      dispatchQueue.push({ event: nativeEvent, listeners });
+      const event = new SyntheticEventCtor(
+         reactName,
+         domEventName,
+         null,
+         nativeEvent,
+         nativeEventTarget
+      );
+      dispatchQueue.push({ event, listeners });
    }
 }
 

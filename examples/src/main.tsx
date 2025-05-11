@@ -176,7 +176,8 @@ function FunctionComponent({ name }: { name: string }) {
          <h2>Hi! {name}</h2>
 
          <button
-            onClick={() => {
+            onClick={(e) => {
+               console.log(e);
                setCount();
             }}
          >

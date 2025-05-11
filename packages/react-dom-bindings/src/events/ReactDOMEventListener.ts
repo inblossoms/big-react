@@ -27,6 +27,8 @@ import {
 } from "./DOMPluginEventSystem";
 import { getClosestInstanceFromNode } from "../client/ReactDOMComponentTree";
 import { invokeGuardedCallbackAndCatchFirstError } from "shared/ReactErrorUtils";
+import { ReactSyntheticEvent } from "./ReactSyntheticEventType";
+import { Fiber } from "../../../react-reconciler/src/ReactInternalTypes";
 
 /**
  * 创建带有优先级的事件监听器包装器
@@ -281,7 +283,7 @@ export function processDispatchQueue(
  * @param currentTarget 当前目标
  */
 function executeDispatch(
-   event: Event,
+   event: ReactSyntheticEvent,
    listener: Function,
    currentTarget: EventTarget
 ): void {
@@ -304,16 +306,26 @@ function executeDispatch(
  * @param inCapturePhase 是否在捕获阶段
  */
 function processpispatchQueueItemsInOrder(
-   event: Event,
+   event: ReactSyntheticEvent,
    dispatchListeners: Array<DispatchListener>,
    inCapturePhase: boolean
 ): void {
-   let previousInstance;
+   //> 跟踪事件传播过程中的 Fiber 节点实例，用于处理事件传播的停止（stopPropagation）
+   let previousInstance: Fiber | null = null;
 
    if (inCapturePhase) {
       //? 捕获阶段，从外层向内层执行（监听器是在冒泡阶段从内向外收集的）
       for (let i = dispatchListeners.length - 1; i >= 0; i--) {
          const { instance, currentTarget, listener } = dispatchListeners[i];
+
+         //> 在事件传播过程中，同一个 Fiber 节点可能会有多个事件监听器（比如同时有捕获和冒泡阶段的监听器）
+         //> 检测事件传播是否跨越了不同的 Fiber 节点：
+         if (previousInstance !== instance && event.isPropagationStopped()) {
+            // 只有当事件传播到新的 Fiber 节点（previousInstance !== instance）时
+            // 并且事件传播被停止（event.isPropagationStopped()）时
+            // 才会真正停止事件传播
+            return;
+         }
          executeDispatch(event, listener, currentTarget);
          previousInstance = instance;
       }
@@ -321,6 +333,10 @@ function processpispatchQueueItemsInOrder(
       //? 冒泡阶段则从内向外执行
       for (let i = 0; i < dispatchListeners.length; i++) {
          const { instance, currentTarget, listener } = dispatchListeners[i];
+
+         if (previousInstance !== instance && event.isPropagationStopped()) {
+            return;
+         }
          executeDispatch(event, listener, currentTarget);
          previousInstance = instance;
       }

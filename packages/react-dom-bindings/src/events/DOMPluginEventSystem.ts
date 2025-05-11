@@ -10,6 +10,7 @@ import {
 } from "./EventListener";
 import { HostComponent } from "react-reconciler/src/ReactWorkTags";
 import getListener from "./getListener";
+import { ReactSyntheticEvent } from "./ReactSyntheticEventType";
 
 /** 原生事件类型 */
 export type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | TouchEvent;
@@ -27,7 +28,7 @@ export type DispatchListener = {
 /** 事件分发条目类型 */
 type DispatchEntry = {
    /** 原生事件对象 */
-   event: AnyNativeEvent;
+   event: ReactSyntheticEvent;
    /** 事件监听器数组 */
    listeners: Array<DispatchListener>;
 };
