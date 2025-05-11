@@ -83,12 +83,27 @@ interface SyntheticEventInstance {
 }
 
 /**
+ * 合成事件构造函数类型
+ */
+type SyntheticEventConstructor = {
+   new (
+      reactName: string | null,
+      reactEventType: string,
+      targetInst: Fiber | null,
+      nativeEvent: { [propName: string]: any },
+      nativeEventTarget: null | EventTarget
+   ): SyntheticEventInstance;
+};
+
+/**
  * 创建合成事件构造函数
  * 该函数用于创建一个合成事件类，用于包装原生DOM事件，提供统一的接口和跨浏览器兼容性
  * @param {EventInterfaceType} Interface - 事件接口定义，定义了事件对象应该具有的属性和方法
- * @returns {Function} 合成事件构造函数
+ * @returns {SyntheticEventConstructor} 合成事件构造函数
  */
-function createSyntheticEvent(Interface: EventInterfaceType) {
+function createSyntheticEvent(
+   Interface: EventInterfaceType
+): SyntheticEventConstructor {
    /**
     * 合成事件基类构造函数
     * 创建一个包装原生DOM事件的合成事件对象，提供统一的接口和跨浏览器兼容性
@@ -205,7 +220,7 @@ function createSyntheticEvent(Interface: EventInterfaceType) {
       isPersistent: functionThatReturnsTrue,
    });
 
-   return SyntheticBaseEvent;
+   return SyntheticBaseEvent as unknown as SyntheticEventConstructor;
 }
 
 /**
@@ -328,11 +343,11 @@ const MouseEventInterface = {
  */
 export const SyntheticEvent = createSyntheticEvent(
    EventInterface as EventInterfaceType
-);
+) as SyntheticEventConstructor;
 
 /**
  * 鼠标合成事件
  */
 export const SyntheticMouseEvent = createSyntheticEvent(
    MouseEventInterface as EventInterfaceType
-);
+) as SyntheticEventConstructor;

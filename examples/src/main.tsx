@@ -211,7 +211,7 @@ function FunctionComponent({ name }: { name: string }) {
             onInput={(e) => {
                console.log(e);
 
-               setText(e.target.value);
+               setText((e.target as HTMLInputElement).value);
             }}
          ></input>
 

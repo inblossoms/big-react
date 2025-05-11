@@ -2,18 +2,18 @@ import {
    registerSimpleEvents,
    topLevelEventsToReactNames,
 } from "../DOMEventProperties";
-import { DOMEventName } from "../DOMEventNames";
-import { Fiber } from "react-reconciler/src/ReactInternalTypes";
+import type { DOMEventName } from "../DOMEventNames";
+import type { Fiber } from "react-reconciler/src/ReactInternalTypes";
 import {
-   AnyNativeEvent,
-   DispatchQueue,
+   type AnyNativeEvent,
+   type DispatchQueue,
    accumulateSinglePhaseListeners,
 } from "../DOMPluginEventSystem";
 import { IS_CAPTURE_PHASE, type EventSystemFlags } from "../EventSystemFlags";
 import { SyntheticEvent, SyntheticMouseEvent } from "../SyntheticEvent";
 
 /**
- * DOM 事件注册：
+ * Simple DOM 事件注册：
  * 从原生事件中提取合成事件
  * 根据事件类型创建对应的合成事件对象，并收集相关的事件监听器
  *

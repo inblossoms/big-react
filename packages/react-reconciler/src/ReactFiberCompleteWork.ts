@@ -11,6 +11,7 @@ import {
 } from "./ReactWorkTags";
 import type { Fiber } from "./ReactInternalTypes";
 import { popProvider } from "./ReactFiiberNewContext";
+import { registrationNameDependencies } from "../../react-dom-bindings/src/events/EventRegistry";
 import {
    precacheFiberNode,
    updateFiberProps,
@@ -110,8 +111,10 @@ function finalizeInitialChildren(el: Element, prevProps: any, nextProps: any) {
                el.textContent = "";
             }
          } else {
-            // attribute: eg > class name
-            if (propKey === "onClick") {
+            // attribute: eg> class name
+            //! 在这里事件不做任何处理
+            //todo 行内 style 样式处理
+            if (registrationNameDependencies[propKey]) {
                //    el.removeEventListener("click", prevProp);
             } else {
                if (!(prevProp in nextProps)) {
@@ -133,7 +136,7 @@ function finalizeInitialChildren(el: Element, prevProps: any, nextProps: any) {
             }
          } else {
             // attribute: eg > class name
-            if (propKey === "onClick") {
+            if (registrationNameDependencies[propKey]) {
                //    el.addEventListener("click", nextProp);
             } else {
                (el as any)[propKey] = nextProp;

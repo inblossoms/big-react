@@ -1,4 +1,5 @@
 import * as SimpleEventPlugin from "./plugins/SimpleEventPlugin";
+import * as ChangeEventPlugin from "./plugins/ChangeEventPlugin";
 import { EventSystemFlags, IS_CAPTURE_PHASE } from "./EventSystemFlags";
 import { DOMEventName } from "./DOMEventNames";
 import { createEventListenerWrapperWithPriority } from "./ReactDOMEventListener";
@@ -39,7 +40,7 @@ export type DispatchQueue = Array<DispatchEntry>;
 // TODO: remove top-level side effect.
 SimpleEventPlugin.registerEvents();
 // EnterLeaveEventPlugin.registerEvents();
-// ChangeEventPlugin.registerEvents();
+ChangeEventPlugin.registerEvents();
 // SelectEventPlugin.registerEvents();
 // BeforeInputEventPlugin.registerEvents();
 
@@ -73,7 +74,15 @@ export function extractEvents(
       targetContariner
    );
 
-   //todo 事件区分
+   ChangeEventPlugin.extractEvents(
+      dispatchQueue,
+      domEventName,
+      targetInst,
+      nativeEvent,
+      nativeEventTarget,
+      eventSystemFlags,
+      targetContariner
+   );
 }
 
 /** 媒体相关事件类型列表 */
@@ -222,7 +231,7 @@ export function accumulateSinglePhaseListeners(
    while (instance !== null) {
       const { stateNode, tag } = instance;
       // 处理位于 HostComponents（即 <div> 元素）上的 listeners
-      if (tag === HostComponent) {
+      if (tag === HostComponent && stateNode !== null) {
          // 标准 React on* listeners, i.e. onClick or onClickCapture
          //> 通过 fiber: instance 和 name: reactEventName 提取事件
          const listener = getListener(instance, reactEventName as string);
@@ -241,5 +250,64 @@ export function accumulateSinglePhaseListeners(
       }
       instance = instance.return;
    }
+   return listeners;
+}
+
+/**
+ * 收集支持捕获和冒泡两个阶段的事件监听器
+ * 从目标 Fiber 节点开始，向上遍历 Fiber 树，收集所有匹配的事件监听器
+ *
+ * @param targetFiber - 目标 Fiber 节点，事件发生的起始位置
+ * @param reactName - React 事件名称，如 'onClick'
+ * @returns 返回按顺序排列的事件监听器数组，包含捕获和冒泡阶段的监听器
+ *
+ * @example
+ * // 对于 onClick 事件，会收集：
+ * // 1. 捕获阶段的监听器（onClickCapture）
+ * // 2. 冒泡阶段的监听器（onClick）
+ * // 监听器按照从外到内的顺序排列
+ */
+export function accumulateTwoPhaseListeners(
+   targetFiber: Fiber | null,
+   reactName: string | null
+): Array<DispatchListener> {
+   // 构建捕获阶段的事件名称（添加 Capture 后缀）
+   const captureName = reactName !== null ? reactName + "Capture" : null;
+
+   let listeners: Array<DispatchListener> = [];
+   let instance = targetFiber;
+
+   // 从目标节点开始，向上遍历 Fiber 树
+   while (instance !== null) {
+      const { stateNode, tag } = instance;
+      // 只处理原生 DOM 元素节点（HostComponent）
+      if (tag === HostComponent && stateNode !== null) {
+         // 1. 收集捕获阶段的监听器
+         const captureListener = getListener(instance, captureName as string);
+         if (captureListener != null) {
+            // 捕获阶段的监听器添加到数组开头，确保从外到内执行
+            listeners.unshift({
+               instance,
+               listener: captureListener,
+               currentTarget: stateNode,
+            });
+         }
+
+         // 2. 收集冒泡阶段的监听器
+         const bubbleListener = getListener(instance, reactName as string);
+         if (bubbleListener != null) {
+            // 冒泡阶段的监听器也添加到数组开头，确保正确的执行顺序
+            listeners.unshift({
+               instance,
+               listener: bubbleListener,
+               currentTarget: stateNode,
+            });
+         }
+      }
+
+      // 继续向上遍历父节点
+      instance = instance.return;
+   }
+
    return listeners;
 }
