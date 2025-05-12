@@ -219,11 +219,6 @@ export function useRef<T>(initialValue: T): { current: T } {
 }
 
 /**
- * 用于优化组件渲染的 HOC
- */
-export function memo() {}
-
-/**
  * 在 DOM 更新后同步执行副作用
  * @param create 副作用函数
  * @param deps 依赖项数组

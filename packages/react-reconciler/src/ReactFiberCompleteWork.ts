@@ -8,6 +8,8 @@ import {
    HostComponent,
    HostRoot,
    HostText,
+   MemoComponent,
+   SimpleMemoComponent,
 } from "./ReactWorkTags";
 import type { Fiber } from "./ReactInternalTypes";
 import { popProvider } from "./ReactFiiberNewContext";
@@ -30,6 +32,8 @@ export function completeWork(
       case ClassComponent:
       case FunctionComponent:
       case ContextConsumer:
+      case MemoComponent:
+      case SimpleMemoComponent:
       case Fragment:
       case HostRoot:
          return null;

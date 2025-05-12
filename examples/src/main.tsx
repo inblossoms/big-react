@@ -11,6 +11,7 @@ import {
    useLayoutEffect,
    createContext,
    useContext,
+   memo,
 } from "../which-react";
 import "./index.css";
 
@@ -215,13 +216,14 @@ function FunctionComponent({ name }: { name: string }) {
             }}
          ></input>
 
-         <p>{textarea}</p>
+         <MemoSlowList text={text}></MemoSlowList>
+         {/* <p>{textarea}</p>
          <textarea
             value={textarea}
             onChange={(e) => {
                setTextarea(e.target.value);
             }}
-         ></textarea>
+         ></textarea> */}
 
          {/* <ThemeContext.Provider value="red">
             <CountContext.Provider value={count}>
@@ -236,6 +238,40 @@ function FunctionComponent({ name }: { name: string }) {
       </div>
    );
 }
+
+function List({ children }: { children: React.ReactNode }) {
+   const now = performance.now();
+   while (performance.now() - now < 3) {}
+   return <div>{children}</div>;
+}
+
+interface SlowListProps {
+   text: string;
+}
+
+const MemoSlowList = memo(
+   function SlowList({ text }: SlowListProps) {
+      console.log("slow list.");
+      const l = [];
+
+      for (let i = 0; i < 500; i++) {
+         l.push(
+            <List key={i}>
+               Result: {i} for {`${text}`}
+            </List>
+         );
+      }
+      return (
+         <div className="border-ov">
+            <p>{text}</p>
+            <ul>{l}</ul>
+         </div>
+      );
+   },
+   (prevProps: SlowListProps, nextProps: SlowListProps) => {
+      return prevProps.text === nextProps.text;
+   }
+);
 
 // function Child() {
 //    const count = useContext(CountContext);

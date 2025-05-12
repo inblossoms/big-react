@@ -11,11 +11,13 @@ import {
    FunctionComponent,
    ContextProvider,
    ContextConsumer,
+   MemoComponent,
 } from "./ReactWorkTags";
 import { isFunction, isString } from "shared/utils";
 import {
    REACT_CONTEXT_TYPE,
    REACT_FRAGMENT_TYPE,
+   REACT_MEMO_TYPE,
    REACT_PROVIDER_TYPE,
 } from "shared/ReactSymbols";
 
@@ -117,6 +119,8 @@ export function createFiberFromTypeAndProps(
       fiberTag = ContextProvider;
    } else if (type.$$typeof === REACT_CONTEXT_TYPE) {
       fiberTag = ContextConsumer;
+   } else if (type.$$typeof === REACT_MEMO_TYPE) {
+      fiberTag = MemoComponent;
    }
 
    const fiber = createFiber(fiberTag, pendingProps, key);
@@ -124,4 +128,27 @@ export function createFiberFromTypeAndProps(
    fiber.type = type;
 
    return fiber;
+}
+
+/**
+ * 当前的组件是否是一个纯函数组件
+ * @param {Fiber} type 组件
+ * @returns 如果是一个纯函数组件则返回 true，否则返回 fasle
+ */
+export function isSimpleFunctionComponent(type: any): boolean {
+   return (
+      typeof type === "function" &&
+      !shouldConstruct(type) &&
+      type.defaultProps === undefined
+   );
+}
+
+/**
+ * 检查组件是否是一个类组件
+ * @param Component 组件
+ * @returns 如果是类组件返回 true，否则返回 fasle
+ */
+function shouldConstruct(Component: Function) {
+   const prototype = Component.prototype;
+   return !!(prototype && prototype.isReactComponent);
 }

@@ -72,6 +72,16 @@ button:focus-visible {
    text-align: center;
 }
 
+.border-ov {
+   margin-top: 20px;
+   height: 100px;
+   width: 200px;
+   overflow: auto;
+   border: 1px solid #616161;
+   border-radius: 5px;
+   text-align: left;
+}
+
 @media (prefers-color-scheme: light) {
    :root {
       color: #213547;

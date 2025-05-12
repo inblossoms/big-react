@@ -8,11 +8,19 @@ import {
    FunctionComponent,
    ContextProvider,
    ContextConsumer,
+   MemoComponent,
+   SimpleMemoComponent,
 } from "./ReactWorkTags";
 import { Fiber } from "./ReactInternalTypes";
 import { isString, isNumber } from "shared/utils";
 import { renderWithHooks } from "./ReactFiberHooks";
 import { pushProvider, readContext } from "./ReactFiiberNewContext";
+import {
+   createFiberFromTypeAndProps,
+   createWorkInProgress,
+   isSimpleFunctionComponent,
+} from "./ReactFiber";
+import shallowEqual from "shared/shallowEqual";
 
 // 协调
 // 1. 根据 fiber 的类型，执行不同的逻辑
@@ -38,11 +46,81 @@ export function beginWork(
          return updateContextProvider(current, workInProgress);
       case ContextConsumer:
          return updateContextConsumer(current, workInProgress);
+      case MemoComponent:
+         return updateMemoComponent(current, workInProgress);
+      case SimpleMemoComponent:
+         return updateSimpleMemoComponent(current, workInProgress);
    }
 
    throw new Error(
       `Unknown unit of work tag: ${workInProgress.tag}, this error is likely caused by a bug in React. Please file an issue.`
    );
+}
+function updateMemoComponent(current: Fiber | null, workInProgress: Fiber) {
+   // memo 缓存组件
+   const Component = workInProgress.type;
+   // 子组件 type
+   const type = Component.type;
+
+   //> 如果是组件的初次渲染，组件直接渲染即可
+   if (current === null) {
+      //! 1. 初次渲染，未定义 compare
+      if (
+         isSimpleFunctionComponent(type) &&
+         Component.compare === null &&
+         Component.defaultProps === undefined
+      ) {
+         workInProgress.type = type;
+         workInProgress.tag = SimpleMemoComponent;
+         return updateSimpleMemoComponent(current, workInProgress);
+      }
+
+      //! 2. 初次渲染，定义 compare
+      const child = createFiberFromTypeAndProps(
+         type,
+         null,
+         workInProgress.pendingProps
+      );
+
+      child.return = workInProgress;
+      workInProgress.child = child;
+      return child;
+   }
+
+   //> 如果是更新渲染阶段，那么需要根据用户 compare 自定义 props 来决定是否需要重新渲染
+   let compare = Component.compare;
+   compare = compare === null ? shallowEqual : compare;
+
+   if (compare(current.memoizedProps, workInProgress.pendingProps)) {
+      return bailoutOnAlreadyFinishedWork();
+   }
+
+   // 更新
+   const newChild = createWorkInProgress(
+      current.child as Fiber,
+      workInProgress.pendingProps
+   );
+
+   newChild.return = workInProgress;
+   workInProgress.child = newChild;
+   return newChild;
+}
+
+function updateSimpleMemoComponent(
+   current: Fiber | null,
+   workInProgress: Fiber
+) {
+   if (current !== null) {
+      // 组件更新，由于到达这里的上层中并没有 compare 所以进行 props 的浅比较
+      if (shallowEqual(current.memoizedProps, workInProgress.pendingProps)) {
+         return bailoutOnAlreadyFinishedWork();
+      }
+   }
+   return updateFunctionComponent(current, workInProgress);
+}
+
+function bailoutOnAlreadyFinishedWork() {
+   return null;
 }
 
 function updateContextConsumer(current: Fiber | null, workInProgress: Fiber) {
