@@ -22,7 +22,7 @@ import {
 } from "shared/ReactSymbols";
 
 /**
- * 创建当前正在工作的 workInProgress 节点
+ * 创建当前正在工作的 workInProgress 节点，用于复用现有的 fiber 节点，适用于更新渲染
  * @param current 当前的 fiber 节点
  * @param pendingProps 新的 props
  */
@@ -93,7 +93,7 @@ export function createFiberFromText(content: string): Fiber {
 }
 
 /**
- * 从类型和 props 创建 fiber
+ * 从类型和 props 创建 fiber，用于创建全新的 fiber 节点，适用于初次渲染
  * @param type 类型
  * @param key 唯一标识
  * @param pendingProps 新的 props
