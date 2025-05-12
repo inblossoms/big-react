@@ -48,6 +48,17 @@ function extractEvents(
    if (inTextInputElement(targetNode)) {
       // 监听input和change事件
       if (domEventName === "input" || domEventName === "change") {
+         // 避免重复触发事件
+         const isValueChanged = getInstIfValueChanged(
+            targetInst as Fiber,
+            targetNode
+         );
+
+         if (!isValueChanged) {
+            // 在某些情况下，DOM 节点的值可能没有实际变化（例如用户输入后又删除，最终值与原值相同）。
+            // 如果值没有变化，触发 change 事件是没有意义的，因此直接返回，避免不必要的处理。
+            return;
+         }
          // 收集onChange事件监听器
          const listeners = accumulateTwoPhaseListeners(targetInst, "onChange");
 
@@ -97,4 +108,19 @@ function registerEvents() {
    ]);
 }
 
+/**
+ * 检查输入元素的值是否发生变化
+ *
+ * @param targetInst - 目标Fiber节点实例
+ * @param targetNode - 目标DOM节点
+ * @returns 如果值发生变化返回true，否则返回false
+ */
+function getInstIfValueChanged(
+   targetInst: Fiber,
+   targetNode: HTMLInputElement
+): boolean {
+   const oldValue = targetInst.pendingProps.value;
+   const newValue = targetNode.value;
+   return oldValue !== newValue;
+}
 export { registerEvents, extractEvents };

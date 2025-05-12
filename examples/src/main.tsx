@@ -190,17 +190,8 @@ function FunctionComponent({ name }: { name: string }) {
             {count}
          </button> */}
          <button
-            onClick={(e) => {
-               console.log(
-                  `🧠 [onClick] \x1b[91mFile: main.tsx\x1b[0m, \x1b[32mLine: 182\x1b[0m, Message: `,
-                  e
-               );
+            onClick={() => {
                setNum(num + 1);
-            }}
-            onDoubleClick={() => {
-               console.log(
-                  `🧠 [onDoubleClick] \x1b[91mFile: main.tsx\x1b[0m, \x1b[32mLine: 182\x1b[0m, Message: `
-               );
             }}
          >
             {num}
@@ -210,13 +201,11 @@ function FunctionComponent({ name }: { name: string }) {
          <input
             value={text}
             onInput={(e) => {
-               console.log(e);
-
                setText((e.target as HTMLInputElement).value);
             }}
          ></input>
 
-         <MemoSlowList text={text}></MemoSlowList>
+         {/* <MemoSlowList text={text}></MemoSlowList> */}
          {/* <p>{textarea}</p>
          <textarea
             value={textarea}
