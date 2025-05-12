@@ -1,6 +1,10 @@
 import * as SimpleEventPlugin from "./plugins/SimpleEventPlugin";
 import * as ChangeEventPlugin from "./plugins/ChangeEventPlugin";
-import { EventSystemFlags, IS_CAPTURE_PHASE } from "./EventSystemFlags";
+import {
+   EventSystemFlags,
+   IS_CAPTURE_PHASE,
+   SHOULD_NOT_PROCESS_POLYFILL_EVENT_PLUGINS,
+} from "./EventSystemFlags";
 import { DOMEventName } from "./DOMEventNames";
 import { createEventListenerWrapperWithPriority } from "./ReactDOMEventListener";
 import { allNativeEvents } from "./EventRegistry";
@@ -74,15 +78,17 @@ export function extractEvents(
       targetContariner
    );
 
-   ChangeEventPlugin.extractEvents(
-      dispatchQueue,
-      domEventName,
-      targetInst,
-      nativeEvent,
-      nativeEventTarget,
-      eventSystemFlags,
-      targetContariner
-   );
+   if ((eventSystemFlags & SHOULD_NOT_PROCESS_POLYFILL_EVENT_PLUGINS) === 0) {
+      ChangeEventPlugin.extractEvents(
+         dispatchQueue,
+         domEventName,
+         targetInst,
+         nativeEvent,
+         nativeEventTarget,
+         eventSystemFlags,
+         targetContariner
+      );
+   }
 }
 
 /** 媒体相关事件类型列表 */
@@ -319,6 +325,7 @@ export function accumulateTwoPhaseListeners(
       if (tag === HostComponent && stateNode !== null) {
          // 1. 收集捕获阶段的监听器
          const captureListener = getListener(instance, captureName as string);
+         // captureListener 可能会是一个 undefined
          if (captureListener != null) {
             // 捕获阶段的监听器添加到数组开头，确保从外到内执行
             listeners.unshift({
