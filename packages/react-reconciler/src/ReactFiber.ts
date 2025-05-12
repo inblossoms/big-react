@@ -46,6 +46,8 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
    }
    //* 数据复用
    workInProgress!.flags = current.flags;
+   workInProgress.lanes = current.lanes;
+   workInProgress.childLanes = current.childLanes;
 
    workInProgress!.child = current.child;
    workInProgress!.memoizedProps = current.memoizedProps;

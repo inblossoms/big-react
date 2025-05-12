@@ -8,6 +8,9 @@ import {
    flushPassiveEffects,
 } from "./ReactFiberCommitWork";
 import { NormalPriority, Scheduler } from "scheduler/index";
+import { claimNextTransitionLane, Lane, NoLane } from "./ReactFiberLane";
+import { getCurrentUpdatePriority } from "./ReactEventPriorities";
+import { getCurrentEventPriority } from "react-dom-bindings/src/client/ReactFiberConfigDOM";
 
 type ExecutionContext = number;
 
@@ -20,6 +23,7 @@ let executionContext: ExecutionContext = NoContext;
 
 let workInProgress: Fiber | null = null;
 let workInProgressRoot: FiberRoot | null = null;
+let workInProgressDeferredLane: Lane = NoLane;
 
 /**
  * 调度更新：页面的初次渲染、类组件的 setState|forceUpdate、函数组件 setState 都会走到更新，调用该函数
@@ -186,4 +190,26 @@ function completeUnitOfWork(unitOfWork: Fiber) {
       completedWork = returnFiber as Fiber;
       workInProgress = completedWork;
    } while (completedWork !== null);
+}
+
+/**
+ * 获取紧急更新 update lane
+ * @returns
+ */
+export function requestUpdateLane(): Lane {
+   const updateLane: Lane = getCurrentUpdatePriority();
+
+   if (updateLane !== NoLane) {
+      return updateLane;
+   }
+   const eventLane: Lane = getCurrentEventPriority();
+
+   return eventLane;
+}
+
+export function requestDeferredLane(): Lane {
+   if (workInProgressDeferredLane === NoLane) {
+      workInProgressDeferredLane = claimNextTransitionLane();
+   }
+   return workInProgressDeferredLane;
 }

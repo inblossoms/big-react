@@ -1,4 +1,5 @@
 import { Flags, NoFlags } from "./ReactFiberFlags";
+import { Lanes, NoLanes } from "./ReactFiberLane";
 import { WorkTag } from "./ReactWorkTags";
 
 export type Container = Element | Document | DocumentFragment;
@@ -6,6 +7,7 @@ export type FiberRoot = {
    containerInfo: Container;
    current: Fiber;
    finishedWork: Fiber | null;
+   pendingLanes: Lanes;
 };
 
 export type Fiber = {
@@ -66,6 +68,11 @@ export type Fiber = {
 
    // 记录 effect 相关信息
    updateQueue: any;
+
+   // 记录当前 fiber 的优先级
+   lanes: Lanes;
+   // 记录子节点的优先级
+   childLanes: Lanes;
 };
 
 export class FiberNode {
@@ -85,6 +92,8 @@ export class FiberNode {
    alternate: FiberNode | null; // 缓存上一次渲染时使用的 fiber
    deletions: Array<Fiber> | null; // 记录要删除的子节点
    updateQueue: any; // 记录 effect 相关信息
+   lanes: number;
+   childLanes: number;
 
    constructor(tag: WorkTag, pendingProps: unknown, key: null | string) {
       this.tag = tag;
@@ -103,5 +112,7 @@ export class FiberNode {
       this.alternate = null;
       this.deletions = null;
       this.updateQueue = null;
+      this.lanes = NoLanes;
+      this.childLanes = NoLanes;
    }
 }
