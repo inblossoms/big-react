@@ -195,11 +195,46 @@ function addTrappedEventListener(
       eventSystemFlags
    );
 
+   // 默认情况下，事件监听器不是被动的
+   let isPassiveListener: boolean = false;
+
+   // 对于某些特定的事件类型，我们需要将其设置为被动事件监听器
+   // 这些事件通常与滚动、触摸等性能敏感的操作相关
+   if (
+      domEventName === "touchstart" || // 触摸开始事件
+      domEventName === "touchmove" || // 触摸移动事件
+      domEventName === "wheel" // 滚轮事件
+   ) {
+      isPassiveListener = true;
+   }
+
+   // 被动事件监听器（passive: true）的作用：
+   // 1. 提高滚动性能：浏览器可以立即开始滚动，而不需要等待 JavaScript 执行
+   // 2. 减少延迟：特别是在移动设备上，可以显著改善用户体验
+   // 3. 优化触摸事件：对于触摸事件，被动监听器可以立即响应，提供更流畅的交互
+   //
+   // 注意：被动事件监听器不能调用 preventDefault()，这意味着：
+   // - 不能阻止默认的滚动行为
+   // - 不能阻止默认的触摸行为
+   // - 不能阻止默认的滚轮行为
+   //
+   // 这种权衡是值得的，因为这些事件通常需要立即响应，而阻止默认行为的情况相对较少
+
    //! 2. 绑定事件
    if (isCapturePhaseListener) {
-      addEventCaptureListener(targetContainer, domEventName, listener);
+      addEventCaptureListener(
+         targetContainer,
+         domEventName,
+         listener,
+         isPassiveListener
+      );
    } else {
-      addEventBubbleListener(targetContainer, domEventName, listener);
+      addEventBubbleListener(
+         targetContainer,
+         domEventName,
+         listener,
+         isPassiveListener
+      );
    }
 }
 
